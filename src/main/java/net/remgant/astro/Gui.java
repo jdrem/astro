@@ -10,6 +10,7 @@ import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.awt.print.PrinterJob;
 import java.io.BufferedReader;
+import java.io.EOFException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.net.URL;
@@ -21,14 +22,14 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         try {
             UIManager.setLookAndFeel
                     ("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
-        } catch (Exception e) {
+        } catch (Exception ignore) {
         }
 
         System.out.println(System.getProperties().getProperty("os.name"));
         System.out.println(System.getProperties().getProperty("os.arch"));
         System.out.println(System.getProperties().getProperty("os.version"));
 
-        Gui frame = new Gui(args);
+        Gui frame = new Gui();
         frame.pack();
         frame.setVisible(true);
     }
@@ -36,7 +37,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
     int screenSizeX;
     int screenSizeY;
     Panel panel;
-    HashSet stars;
+    Set<Star> stars;
     boolean showConBounds;
     boolean showGrid;
     boolean showEcliptic;
@@ -47,7 +48,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
     boolean sunPathMode;
     double maxMagnitude;
 
-    Gui(String args[]) {
+    Gui() {
         super("Remgant Sky Watcher");
         screenSizeX = 750;
         screenSizeY = 400;
@@ -140,9 +141,9 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         panel.addComponentListener(this);
         // panel.addMouseMotionListener(this);
 
-        stars = new HashSet();
+        stars = new HashSet<Star>();
 
-        loadObjects("", stars);
+        loadObjects(stars);
 
         showConBounds = true;
         showGrid = true;
@@ -156,7 +157,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         drawScreen();
         // panel.setToolTipText("Tool Tip Text\nSecond Line of Text");
 
-        URL iconURL = null;
+        URL iconURL;
         if (System.getProperties().getProperty("os.name").equals("SunOS"))
             iconURL = getClass().getResource("largeIcon.png");
         else
@@ -239,7 +240,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         JButton cancelButton = new JButton("Cancel");
         c.gridx = 2;
         c.gridy = 0;
-        panels[p++].add(cancelButton, BorderLayout.EAST);
+        panels[p].add(cancelButton, BorderLayout.EAST);
         cancelButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 d.dispose();
@@ -252,7 +253,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
             }
         });
         d.setBounds(0, 0, 225, 175);
-        d.show();
+        d.setVisible(true);
     }
 
     private void editLocalSkyProperties() {
@@ -265,7 +266,6 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         JPanel panels[] = new JPanel[5];
         for (int i = 0; i < 5; i++) {
             panels[i] = new JPanel();
-            // panels[i].setLayout(new GridBagLayout());
             panels[i].setLayout(new BorderLayout());
             c.gridx = 0;
             c.gridy = i;
@@ -339,7 +339,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
             }
         });
         d.setBounds(0, 0, 300, 175);
-        d.show();
+        d.setVisible(true);
     }
 
     private void drawScreen(Drawable d) {
@@ -382,9 +382,9 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         */
     }
 
+    @SuppressWarnings({"UnusedDeclaration"})
     private void drawStars() {
-        for (Iterator i = stars.iterator(); i.hasNext();) {
-            Star o = (Star) i.next();
+        for (Star o : stars) {
             double ra = o.getRA(0.0);
             double decl = o.getDecl(0.0);
             int x = screenSizeX - (int) (ra / 360.0 * (double) screenSizeX);
@@ -404,8 +404,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
     }
 
     private void drawStars(Drawable d) {
-        for (Iterator i = stars.iterator(); i.hasNext();) {
-            Star o = (Star) i.next();
+        for (Star o : stars) {
             double ra = o.getRA(0.0);
             double decl = o.getDecl(0.0);
             int x = d.getXOffset() + d.getWidth()
@@ -425,8 +424,6 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
             }
         }
     }
-
-    String boundaryFileName = "boundaries.dat";
 
     private void drawBoundaryLines() {
         try {
@@ -458,6 +455,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         }
     }
 
+    @SuppressWarnings({"UnusedDeclaration"})
     private void drawIndexLines() {
         for (int i = 1; i < 12; i++) {
             panel.drawLine(screenSizeX / 12 * i, 0, screenSizeX / 12 * i, screenSizeY,
@@ -510,7 +508,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         double d = net.remgant.astro.Time.getDayNumber(cal);
         double lon = -71.4750;
         double lat = 42.4750;
-        Point p = null;
+        Point p;
 
         if (!rectDisplayMode) {
             panel.clear(Color.gray);
@@ -520,8 +518,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
             panel.drawFilledCircle(screenSizeX / 2, screenSizeY / 2, r, Color.black);
         }
 
-        for (Iterator i = stars.iterator(); i.hasNext();) {
-            Star o = (Star) i.next();
+        for (Star o : stars) {
             double az = o.getAzimuth(d, 0.0, lon, lat);
             double alt = o.getAltitude(d, 0.0, lon, lat);
             double magnitude = o.getMagnitude();
@@ -570,7 +567,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         cal[2].set(2003, Calendar.JUNE, 21, 19, 0, 0);
         double lon = -71.4750;
         double lat = 42.4750;
-        Point p = null;
+        Point p;
 
         if (!rectDisplayMode) {
             panel.clear(Color.gray);
@@ -644,7 +641,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         return r;
     }
 
-    private void loadObjects(String fileName, Set set) {
+    private void loadObjects(Set<Star> set) {
 
         try {
             ObjectInputStream in = new ObjectInputStream(getClass().getResource("bsc.obj").openStream());
@@ -652,9 +649,9 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
                 Object o = in.readObject();
                 if (o == null)
                     break;
-                set.add(o);
+                set.add((Star) o);
             }
-        } catch (java.io.EOFException eof) {
+        } catch (EOFException ignored) {
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -680,59 +677,47 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         }
 
         public void clear(Color c) {
-            synchronized (image) {
-                Graphics g = image.getGraphics();
-                g.clearRect(0, 0, dim.width, dim.height);
-                g.setColor(c);
-                g.fillRect(0, 0, dim.width, dim.height);
-            }
+            Graphics g = image.getGraphics();
+            g.clearRect(0, 0, dim.width, dim.height);
+            g.setColor(c);
+            g.fillRect(0, 0, dim.width, dim.height);
         }
 
         public void drawPoint(int x, int y, Color c) {
-            synchronized (image) {
-                Graphics g = image.getGraphics();
-                g.setColor(c);
-                g.drawLine(x, y, x, y);
-            }
+
+            Graphics g = image.getGraphics();
+            g.setColor(c);
+            g.drawLine(x, y, x, y);
+
         }
 
         public void drawPoint(Point p, Color c) {
-            synchronized (image) {
-                Graphics g = image.getGraphics();
-                g.setColor(c);
-                g.drawLine(p.x, p.y, p.x, p.y);
-            }
+            Graphics g = image.getGraphics();
+            g.setColor(c);
+            g.drawLine(p.x, p.y, p.x, p.y);
         }
 
         public void drawLine(int xa, int ya, int xb, int yb, Color c) {
-            synchronized (image) {
-                Graphics g = image.getGraphics();
-                g.setColor(c);
-                g.drawLine(xa, ya, xb, yb);
-            }
+            Graphics g = image.getGraphics();
+            g.setColor(c);
+            g.drawLine(xa, ya, xb, yb);
         }
 
         public void drawCircle(int x, int y, int r, Color c) {
-            synchronized (image) {
-                Graphics g = image.getGraphics();
-                g.setColor(c);
-                g.drawOval(x, y, r, r);
-            }
+            Graphics g = image.getGraphics();
+            g.setColor(c);
+            g.drawOval(x, y, r, r);
         }
 
         public void drawFilledCircle(int x, int y, int r, Color c) {
-            synchronized (image) {
-                Graphics g = image.getGraphics();
-                g.setColor(c);
-                g.fillOval(x - r / 2, y - r / 2, r, r);
-            }
+            Graphics g = image.getGraphics();
+            g.setColor(c);
+            g.fillOval(x - r / 2, y - r / 2, r, r);
         }
 
         public void paintComponent(Graphics g) {
             super.paintComponent(g);
-            synchronized (image) {
-                g.drawImage(image, 0, 0, Color.gray, this);
-            }
+            g.drawImage(image, 0, 0, Color.gray, this);
         }
 
         public int getXOffset() {
@@ -759,6 +744,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
             this.yOff = yOff;
         }
 
+        @SuppressWarnings({"UnusedDeclaration"})
         public void clear() {
             clear(Color.white);
         }
