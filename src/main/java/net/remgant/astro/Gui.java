@@ -44,12 +44,11 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
     boolean showConBounds;
     boolean showGrid;
     boolean showEcliptic;
-    boolean fullSkyMode;
-    boolean localSkyMode;
     boolean rectDisplayMode;
     boolean currentTimeMode;
-    boolean sunPathMode;
     double maxMagnitude;
+    enum DisplayMode{FULL_SKY,LOCAL_SKY,SUN_PATH}
+    DisplayMode displayMode;
 
     Gui() {
         super("Remgant Sky Watcher");
@@ -151,13 +150,11 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         showConBounds = true;
         showGrid = true;
         showEcliptic = true;
-        fullSkyMode = true;
-        localSkyMode = !fullSkyMode;
-        sunPathMode = !fullSkyMode;
+        displayMode = DisplayMode.FULL_SKY;
         rectDisplayMode = true;
         currentTimeMode = true;
         maxMagnitude = 4.0;
-        drawScreen(panel);
+        drawScreen(panel,displayMode);
         // panel.setToolTipText("Tool Tip Text\nSecond Line of Text");
 
         URL iconURL;
@@ -170,7 +167,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
     }
 
     private void editProperties() {
-        if (fullSkyMode)
+        if (displayMode == DisplayMode.FULL_SKY)
             editFullSkyProperties();
         else
             editLocalSkyProperties();
@@ -234,7 +231,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
                     showGrid = showGridCheckBox.isSelected();
                     showEcliptic = showEclipticCheckBox.isSelected();
                     maxMagnitude = Double.parseDouble(maxMagnitudeField.getText());
-                    drawScreen(panel);
+                    drawScreen(panel,displayMode);
                     d.dispose();
                 }
             }
@@ -320,7 +317,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
                     showGrid = showGridCheckBox.isSelected();
                     rectDisplayMode = rectDisplayButton.isSelected();
                     currentTimeMode = currentTimeButton.isSelected();
-                    drawScreen(panel);
+                    drawScreen(panel,displayMode);
                     d.dispose();
                 }
             }
@@ -345,35 +342,35 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         d.setVisible(true);
     }
 
-    private void drawScreen(Drawable drawable)
+    private void drawScreen(Drawable drawable,DisplayMode displayMode)
     {
         clearScreen(drawable, drawable.getBounds2D());
-        if (fullSkyMode)
-            drawFullSkyScreen(drawable);
-        else if (localSkyMode)
-            drawLocalScreen();
-        else if (sunPathMode)
-            drawSunPathScreen();
+        switch(displayMode)
+        {
+            case FULL_SKY:
+                drawFullSkyScreen(drawable);
+                break;
+            case LOCAL_SKY:
+                drawLocalScreen();
+                break;
+            case SUN_PATH:
+                drawSunPathScreen();
+                break;
+        }
         panel.repaint();
     }
-
-    private void drawScreen(Drawable drawable,boolean fullSkyMode,boolean localSkyMode, boolean sunPathMode)
-    {
-        clearScreen(drawable, drawable.getBounds2D());
-        if (fullSkyMode)
-            drawFullSkyScreen(drawable);
-        else if (localSkyMode)
-            drawLocalScreen();
-        else if (sunPathMode)
-            drawSunPathScreen();
-        panel.repaint();
-    }
-
 
     private void clearScreen(Drawable drawable,Rectangle2D bounds)
     {
         Graphics2D g = drawable.createGraphics();
         g.setColor(drawable.isBW()?Color.WHITE:Color.BLACK);
+        g.fill(bounds);
+    }
+
+    private void fillScreen(Drawable drawable,Rectangle2D bounds,Color color)
+    {
+        Graphics2D g = drawable.createGraphics();
+        g.setColor(color);
         g.fill(bounds);
     }
 
@@ -794,7 +791,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         screenSizeY = panel.getHeight();
         Dimension size = new Dimension(screenSizeX, screenSizeY);
         panel.resizeImage(size);
-        drawScreen(panel);
+        drawScreen(panel,displayMode);
     }
 
     public void componentShown(ComponentEvent e) {
@@ -803,19 +800,13 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
     // this is required when implementing ActionListener
     public void actionPerformed(ActionEvent e) {
         if (e.getActionCommand().equals("Full Sky")) {
-            fullSkyMode = true;
-            localSkyMode = false;
-            sunPathMode = false;
+            displayMode = DisplayMode.FULL_SKY;
         } else if (e.getActionCommand().equals("Local Sky")) {
-            fullSkyMode = false;
-            localSkyMode = true;
-            sunPathMode = false;
+            displayMode = DisplayMode.LOCAL_SKY;
         } else if (e.getActionCommand().equals("Sun Path")) {
-            fullSkyMode = false;
-            localSkyMode = false;
-            sunPathMode = true;
+            displayMode = DisplayMode.SUN_PATH;
         }
-        drawScreen(panel);
+        drawScreen(panel,displayMode);
     }
 
     // Next two are required for MouseMotionListener
@@ -837,7 +828,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
                 (int) pf.getImageableHeight(),
                 (int) pf.getImageableX(),
                 (int) pf.getImageableY());
-        drawScreen(page, true, false, false);
+        drawScreen(page,DisplayMode.FULL_SKY);
         return Printable.PAGE_EXISTS;
     }
 }
