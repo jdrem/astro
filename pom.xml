@@ -8,6 +8,11 @@
     <artifactId>astro</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+    <scm>
+        <connection>scm:svn:https://subversion.assembla.com/svn/remgant/astro</connection>
+        <url>https://www.assembla.com/code/remgant/subversion/nodes/astro</url>
+    </scm>
+
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
