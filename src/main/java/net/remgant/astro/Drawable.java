@@ -1,26 +1,21 @@
 package net.remgant.astro;
 
 import java.awt.*;
+import java.awt.geom.Rectangle2D;
 
 public interface Drawable {
-    public void clear(Color c);
+     public Graphics2D createGraphics();
 
-    public void drawPoint(int x, int y, Color c);
+    public boolean isBW();
 
-    public void drawPoint(Point p, Color c);
+    public double getWidth2D();
 
-    public void drawLine(int xa, int ya, int xb, int yb, Color c);
+    public double getHeight2D();
 
-    public void drawCircle(int x, int y, int r, Color c);
+    public double getXOffset2D();
 
-    public void drawFilledCircle(int x, int y, int r, Color c);
+    public double getYOffset2D();
 
-    public int getWidth();
-
-    public int getHeight();
-
-    public int getXOffset();
-
-    public int getYOffset();
+    public Rectangle2D getBounds2D();
 }
 
