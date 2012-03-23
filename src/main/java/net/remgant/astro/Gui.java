@@ -5,6 +5,9 @@ import net.remgant.gui.DecimalField;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Line2D;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
@@ -154,7 +157,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         rectDisplayMode = true;
         currentTimeMode = true;
         maxMagnitude = 4.0;
-        drawScreen();
+        drawScreen(panel);
         // panel.setToolTipText("Tool Tip Text\nSecond Line of Text");
 
         URL iconURL;
@@ -231,7 +234,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
                     showGrid = showGridCheckBox.isSelected();
                     showEcliptic = showEclipticCheckBox.isSelected();
                     maxMagnitude = Double.parseDouble(maxMagnitudeField.getText());
-                    drawScreen();
+                    drawScreen(panel);
                     d.dispose();
                 }
             }
@@ -317,7 +320,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
                     showGrid = showGridCheckBox.isSelected();
                     rectDisplayMode = rectDisplayButton.isSelected();
                     currentTimeMode = currentTimeButton.isSelected();
-                    drawScreen();
+                    drawScreen(panel);
                     d.dispose();
                 }
             }
@@ -342,15 +345,11 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         d.setVisible(true);
     }
 
-    private void drawScreen(Drawable d) {
+    private void drawScreen(Drawable drawable)
+    {
+        clearScreen(drawable, drawable.getBounds2D());
         if (fullSkyMode)
-            drawFullSkyScreen(d);
-    }
-
-    private void drawScreen() {
-        panel.clear();
-        if (fullSkyMode)
-            drawFullSkyScreen();
+            drawFullSkyScreen(drawable);
         else if (localSkyMode)
             drawLocalScreen();
         else if (sunPathMode)
@@ -358,95 +357,84 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         panel.repaint();
     }
 
-    private void drawFullSkyScreen() {
+    private void drawScreen(Drawable drawable,boolean fullSkyMode,boolean localSkyMode, boolean sunPathMode)
+    {
+        clearScreen(drawable, drawable.getBounds2D());
+        if (fullSkyMode)
+            drawFullSkyScreen(drawable);
+        else if (localSkyMode)
+            drawLocalScreen();
+        else if (sunPathMode)
+            drawSunPathScreen();
+        panel.repaint();
+    }
+
+
+    private void clearScreen(Drawable drawable,Rectangle2D bounds)
+    {
+        Graphics2D g = drawable.createGraphics();
+        g.setColor(drawable.isBW()?Color.WHITE:Color.BLACK);
+        g.fill(bounds);
+    }
+
+    private void drawFullSkyScreen(Drawable drawable) {
         if (showGrid)
-            drawIndexLines(panel);
+            drawIndexLines(drawable);
         if (showConBounds)
-            drawBoundaryLines();
-        drawStars(panel);
+            drawBoundaryLines2D(drawable);
+        drawStars(drawable);
         if (showEcliptic)
-            drawEcliptic();
+            drawEcliptic(drawable);
     }
 
-    private void drawFullSkyScreen(Drawable d) {
-        if (showGrid)
-            drawIndexLines(d);
-        /*
-    if (showConBounds)
-        drawBoundaryLines(d);
-        */
-        drawStars(d);
-        /*
-    if (showEcliptic)
-        drawEcliptic(d);
-        */
+    private void drawStars(Drawable d)
+    {
+        Graphics2D g = d.createGraphics();
+          for (Star o : stars) {
+               double magnitude = o.getMagnitude();
+              if (magnitude > maxMagnitude)
+                  continue;
+              double ra = o.getRA(0.0);
+              double decl = o.getDecl(0.0);
+              double x = d.getXOffset2D() + d.getWidth2D()
+                       - (ra / 360.0 * (double) screenSizeX);
+              double y = d.getYOffset2D() +  (((90.0 - decl) / 180.0) *
+                     d.getHeight2D());
+
+              Color c = d.isBW() ? Color.BLACK : Color.WHITE;
+              g.setColor(c);
+              g.fill(new Ellipse2D.Double(x,y,2.0,2.0));
+          }
     }
 
-    @SuppressWarnings({"UnusedDeclaration"})
-    private void drawStars() {
-        for (Star o : stars) {
-            double ra = o.getRA(0.0);
-            double decl = o.getDecl(0.0);
-            int x = screenSizeX - (int) (ra / 360.0 * (double) screenSizeX);
-            int y = (int) (((90.0 - decl) / 180.0) * (double) screenSizeY);
-            double magnitude = o.getMagnitude();
-            if (magnitude <= 1.0) {
-                panel.drawLine(x - 1, y - 1, x - 1, y + 1, Color.white);
-                panel.drawLine(x, y - 1, x, y + 1, Color.white);
-                panel.drawLine(x + 1, y - 1, x + 1, y + 1, Color.white);
-            } else if (magnitude <= 3.0) {
-                panel.drawLine(x, y - 1, x, y + 1, Color.white);
-                panel.drawLine(x - 1, y, x + 1, y, Color.white);
-            } else if (magnitude <= maxMagnitude) {
-                panel.drawPoint(x, y, Color.white);
-            }
-        }
-    }
-
-    private void drawStars(Drawable d) {
-        for (Star o : stars) {
-            double ra = o.getRA(0.0);
-            double decl = o.getDecl(0.0);
-            int x = d.getXOffset() + d.getWidth()
-                    - (int) (ra / 360.0 * (double) screenSizeX);
-            int y = d.getYOffset() + (int) (((90.0 - decl) / 180.0) *
-                    (double) d.getHeight());
-            double magnitude = o.getMagnitude();
-            if (magnitude <= 1.0) {
-                d.drawLine(x - 1, y - 1, x - 1, y + 1, Color.white);
-                d.drawLine(x, y - 1, x, y + 1, Color.white);
-                d.drawLine(x + 1, y - 1, x + 1, y + 1, Color.white);
-            } else if (magnitude <= 3.0) {
-                d.drawLine(x, y - 1, x, y + 1, Color.white);
-                d.drawLine(x - 1, y, x + 1, y, Color.white);
-            } else if (magnitude <= maxMagnitude) {
-                d.drawPoint(x, y, Color.white);
-            }
-        }
-    }
-
-    private void drawBoundaryLines() {
-        try {
+    private void drawBoundaryLines2D(Drawable drawable)
+    {
+        Graphics2D g = drawable.createGraphics();
+        g.setColor(drawable.isBW() ? Color.BLACK : Color.WHITE);
+        double width = drawable.getWidth2D();
+        double height = drawable.getHeight2D();
+        try
+        {
             BufferedReader in =
                     new BufferedReader(new InputStreamReader(
                             getClass().getResource("boundaries.dat").openStream()));
             String line = in.readLine();
             while (line != null && line.length() > 0) {
                 double d[] = tokenizeDoubles(line);
-                int x1 = screenSizeX - (int) (d[0] / 360.0 * (double) screenSizeX);
-                int y1 = (int) (((90.0 - d[1]) / 180.0) * (double) screenSizeY);
-                int x2 = screenSizeX - (int) (d[2] / 360.0 * (double) screenSizeX);
-                int y2 = (int) (((90.0 - d[3]) / 180.0) * (double) screenSizeY);
-                if (Math.abs(x1 - x2) > screenSizeX / 2) {
+                double x1 = width -  (d[0] / 360.0 * width);
+                double y1 = (((90.0 - d[1]) / 180.0) *  height);
+                double x2 = width - (d[2] / 360.0 * width);
+                double y2 = (((90.0 - d[3]) / 180.0) *  height);
+                if (Math.abs(x1 - x2) > width / 2.0) {
                     if (x1 > x2) {
-                        panel.drawLine(x1, y1, screenSizeX, y2, Color.white);
-                        panel.drawLine(0, y1, x2, y2, Color.white);
+                        g.draw(new Line2D.Double(x1,y1,width,y2));
+                        g.draw(new Line2D.Double(0.0,y1,x2,y2));
                     } else {
-                        panel.drawLine(x1, y1, 0, y2, Color.white);
-                        panel.drawLine(screenSizeX, y1, x2, y2, Color.white);
+                        g.draw(new Line2D.Double(x1,y1,0.0,y2));
+                        g.draw(new Line2D.Double(width,y1,x2,y2));
                     }
                 } else {
-                    panel.drawLine(x1, y1, x2, y2, Color.white);
+                    g.draw(new Line2D.Double(x1,y1,x2,y2));
                 }
                 line = in.readLine();
             }
@@ -455,38 +443,26 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         }
     }
 
-    @SuppressWarnings({"UnusedDeclaration"})
-    private void drawIndexLines() {
-        for (int i = 1; i < 12; i++) {
-            panel.drawLine(screenSizeX / 12 * i, 0, screenSizeX / 12 * i, screenSizeY,
-                    Color.red);
+    private void drawIndexLines(Drawable d)
+    {
+        Graphics2D g = d.createGraphics();
+        g.setColor(d.isBW()?Color.BLACK:Color.RED);
+         for (int i = 1; i < 12; i++) {
+            g.draw(new Line2D.Double(d.getWidth2D()/12.0*(double)i,d.getYOffset2D(),
+                    d.getWidth2D() / 12.0 * (double)i,d.getHeight2D()));
         }
         for (int i = 1; i <= 5; i++) {
-            panel.drawLine(0, screenSizeY / 6 * i, screenSizeX, screenSizeY / 6 * i,
-                    Color.red);
+            g.draw(new Line2D.Double(d.getXOffset2D(),d.getHeight2D() / 6.0 * (double)i,
+                    d.getWidth2D(), d.getHeight2D() / 6.0 * (double)i));
         }
-
     }
 
-    private void drawIndexLines(Drawable d) {
-        for (int i = 1; i < 12; i++) {
-            d.drawLine(d.getWidth() / 12 * i, d.getYOffset(),
-                    d.getWidth() / 12 * i, d.getHeight(),
-                    Color.red);
-            /*
-     System.out.println((d.getWidth()/12*i)+" "+(d.getYOffset())+" "+
-            (d.getWidth()/12*i)+" "+(d.getHeight()));
-            */
-        }
-        for (int i = 1; i <= 5; i++) {
-            d.drawLine(d.getXOffset(), d.getHeight() / 6 * i,
-                    d.getWidth(), d.getHeight() / 6 * i,
-                    Color.red);
-        }
-
-    }
-
-    private void drawEcliptic() {
+    private void drawEcliptic(Drawable drawable)
+    {
+        Graphics2D g = drawable.createGraphics();
+        double width = drawable.getWidth2D();
+        double height = drawable.getHeight2D();
+        g.setColor(drawable.isBW()?Color.BLACK:Color.YELLOW);
         Sun sun = new Sun();
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         cal.set(2000, Calendar.MARCH, 21, 0, 0);
@@ -495,16 +471,16 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
             d = d + (double) i / 10.0;
             double ra = sun.getRA(d);
             double decl = sun.getDecl(d);
-            int x = screenSizeX - (int) (ra / 360.0 * (double) screenSizeX);
-            int y = (int) (((90.0 - decl) / 180.0) * (double) screenSizeY);
-            // System.out.println(ra+" "+decl+" "+x+" "+y);
-            panel.drawPoint(x, y, Color.yellow);
+            double x = width - (ra / 360.0 *  width);
+            double y =  (((90.0 - decl) / 180.0) *  height);
+            g.fill(new Ellipse2D.Double(x,y,1.0,1.0));
         }
     }
 
     private void drawLocalScreen() {
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        cal.set(2002, Calendar.FEBRUARY, 16, 0, 0, 0);
+        //cal.set(2002, Calendar.FEBRUARY, 16, 0, 0, 0);
+        cal.setTime(new Date());
         double d = net.remgant.astro.Time.getDayNumber(cal);
         double lon = -71.4750;
         double lat = 42.4750;
@@ -672,10 +648,6 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
             image = new BufferedImage(d.width, d.height, BufferedImage.TYPE_INT_RGB);
         }
 
-        public void clear() {
-            clear(Color.black);
-        }
-
         public void clear(Color c) {
             Graphics g = image.getGraphics();
             g.clearRect(0, 0, dim.width, dim.height);
@@ -685,34 +657,22 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
 
         public void drawPoint(int x, int y, Color c) {
 
-            Graphics g = image.getGraphics();
+             Graphics2D g = image.createGraphics();
             g.setColor(c);
-            g.drawLine(x, y, x, y);
+            g.fill(new Ellipse2D.Double((double)x,(double)y,1.0,1.0));
 
-        }
-
-        public void drawPoint(Point p, Color c) {
-            Graphics g = image.getGraphics();
-            g.setColor(c);
-            g.drawLine(p.x, p.y, p.x, p.y);
         }
 
         public void drawLine(int xa, int ya, int xb, int yb, Color c) {
-            Graphics g = image.getGraphics();
+            Graphics2D g = image.createGraphics();
             g.setColor(c);
-            g.drawLine(xa, ya, xb, yb);
-        }
-
-        public void drawCircle(int x, int y, int r, Color c) {
-            Graphics g = image.getGraphics();
-            g.setColor(c);
-            g.drawOval(x, y, r, r);
+            g.fill(new Line2D.Double((double)xa,(double)ya,(double)xb,(double)yb));
         }
 
         public void drawFilledCircle(int x, int y, int r, Color c) {
-            Graphics g = image.getGraphics();
+            Graphics2D g = image.createGraphics();
             g.setColor(c);
-            g.fillOval(x - r / 2, y - r / 2, r, r);
+            g.fill(new Ellipse2D.Double((double)x/2.0,(double)y/2.0,(double)r,(double)r));
         }
 
         public void paintComponent(Graphics g) {
@@ -720,12 +680,39 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
             g.drawImage(image, 0, 0, Color.gray, this);
         }
 
-        public int getXOffset() {
+        @Override
+        public Graphics2D createGraphics() {
+            return image.createGraphics();
+        }
+
+        @Override
+        public boolean isBW() {
+            return false;
+        }
+
+        @Override
+        public double getWidth2D() {
+            return (double)getWidth();
+        }
+
+        @Override
+        public double getHeight2D() {
+            return (double)getHeight();
+        }
+
+        @Override
+        public double getXOffset2D() {
             return 0;
         }
 
-        public int getYOffset() {
+        @Override
+        public double getYOffset2D() {
             return 0;
+        }
+
+        @Override
+        public Rectangle2D getBounds2D() {
+            return new Rectangle2D.Double(0.0,0.0,(double)getHeight(),(double)getWidth());
         }
     }
 
@@ -757,65 +744,39 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
             g.fillRect(xOff, yOff, width, height);
         }
 
-        public void drawPoint(int x, int y, Color c) {
-            if (c.equals(Color.black))
-                c = Color.white;
-            else if (c.equals(Color.white))
-                c = Color.black;
-            g.setColor(c);
-            g.drawLine(x, y, x, y);
+        @Override
+        public Graphics2D createGraphics() {
+            return (Graphics2D)g;
         }
 
-        public void drawPoint(Point p, Color c) {
-            if (c.equals(Color.black))
-                c = Color.white;
-            else if (c.equals(Color.white))
-                c = Color.black;
-            g.setColor(c);
-            g.drawLine(p.x, p.y, p.x, p.y);
+        @Override
+        public boolean isBW() {
+            return true;
         }
 
-        public void drawLine(int xa, int ya, int xb, int yb, Color c) {
-            if (c.equals(Color.black))
-                c = Color.white;
-            else if (c.equals(Color.white))
-                c = Color.black;
-            g.setColor(c);
-            g.drawLine(xa, ya, xb, yb);
+        @Override
+        public double getWidth2D() {
+            return (double)width;
         }
 
-        public void drawCircle(int x, int y, int r, Color c) {
-            if (c.equals(Color.black))
-                c = Color.white;
-            else if (c.equals(Color.white))
-                c = Color.black;
-            g.setColor(c);
-            g.drawOval(x, y, r, r);
+        @Override
+        public double getHeight2D() {
+            return (double)height;
         }
 
-        public void drawFilledCircle(int x, int y, int r, Color c) {
-            if (c.equals(Color.black))
-                c = Color.white;
-            else if (c.equals(Color.white))
-                c = Color.black;
-            g.setColor(c);
-            g.fillOval(x - r / 2, y - r / 2, r, r);
+        @Override
+        public double getXOffset2D() {
+            return (double)xOff;
         }
 
-        public int getWidth() {
-            return width;
+        @Override
+        public double getYOffset2D() {
+            return (double)yOff;
         }
 
-        public int getHeight() {
-            return height;
-        }
-
-        public int getXOffset() {
-            return xOff;
-        }
-
-        public int getYOffset() {
-            return yOff;
+        @Override
+        public Rectangle2D getBounds2D() {
+            return new Rectangle2D.Double(0.0,0.0,width,height);
         }
     }
 
@@ -833,7 +794,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         screenSizeY = panel.getHeight();
         Dimension size = new Dimension(screenSizeX, screenSizeY);
         panel.resizeImage(size);
-        drawScreen();
+        drawScreen(panel);
     }
 
     public void componentShown(ComponentEvent e) {
@@ -854,7 +815,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
             localSkyMode = false;
             sunPathMode = true;
         }
-        drawScreen();
+        drawScreen(panel);
     }
 
     // Next two are required for MouseMotionListener
@@ -876,7 +837,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
                 (int) pf.getImageableHeight(),
                 (int) pf.getImageableX(),
                 (int) pf.getImageableY());
-        drawScreen(page);
+        drawScreen(page, true, false, false);
         return Printable.PAGE_EXISTS;
     }
 }
