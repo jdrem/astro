@@ -1,13 +1,15 @@
 package net.remgant.astro;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+
+import org.junit.Test;
 
 import java.util.Calendar;
 import java.util.TimeZone;
 
-public class AstroTest extends TestCase {
+import static org.junit.Assert.assertEquals;
+
+public class AstroTest {
+    @Test
     public void testTime() {
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         cal.set(1990, Calendar.APRIL, 19, 0, 0, 0);
@@ -22,6 +24,7 @@ public class AstroTest extends TestCase {
         assertEquals(expected, actual, 0.001);
     }
 
+    @Test
     public void testSunRA() {
         Sun sun = new Sun();
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
@@ -33,6 +36,7 @@ public class AstroTest extends TestCase {
         assertEquals(expectedRA, actualRA, 0.01);
     }
 
+    @Test
     public void testSunDecl() {
         Sun sun = new Sun();
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
@@ -44,6 +48,7 @@ public class AstroTest extends TestCase {
         assertEquals(expectedDecl, actualDecl, 0.01);
     }
 
+    @Test
     public void testSunAzm() {
         Sun sun = new Sun();
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
@@ -61,6 +66,7 @@ public class AstroTest extends TestCase {
         assertEquals(expectedAzm, actualAzm, 0.01);
     }
 
+    @Test
     public void testSunrise() {
         Sun sun = new Sun();
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
@@ -74,6 +80,7 @@ public class AstroTest extends TestCase {
         assertEquals(expected, actual, 0.1);
     }
 
+    @Test
     public void testSunAlt() {
         Sun sun = new Sun();
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
@@ -87,6 +94,7 @@ public class AstroTest extends TestCase {
         assertEquals(expectedAlt, actualAlt, 0.01);
     }
 
+    @Test
     public void testSiriusRA() {
         Star sirius = new Star("101.2871", "-15.2839", "CMa", "9", "Alp", "Sirius",
                 "-1.46", "A");
@@ -99,6 +107,7 @@ public class AstroTest extends TestCase {
         assertEquals(expectedRA, actualRA, 0.0001);
     }
 
+    @Test
     public void testSiriusDecl() {
         Star sirius = new Star("101.2871", "-15.2839", "CMa", "9", "Alp", "Sirius",
                 "-1.46", "A");
@@ -111,6 +120,7 @@ public class AstroTest extends TestCase {
         assertEquals(expectedDecl, actualDecl, 0.0001);
     }
 
+    @Test
     public void testStarRA() {
         Star star = new Star("101.2871", "-15.2839", "CMa", "9", "Alp", "Sirius",
                 "-1.46", "A");
@@ -119,6 +129,7 @@ public class AstroTest extends TestCase {
         assertEquals(expectedRA, actualRA, 0.0001);
     }
 
+    @Test
     public void testStarDecl() {
         Star star = new Star("101.2871", "-15.2839", "CMa", "9", "Alp", "Sirius",
                 "-1.46", "A");
@@ -127,6 +138,7 @@ public class AstroTest extends TestCase {
         assertEquals(expectedDecl, actualDecl, 0.0001);
     }
 
+    @Test
     public void testSiriusAzm() {
         Star sirius = new Star("101.2871", "-15.2839", "CMa", "9", "Alp", "Sirius",
                 "-1.46", "A");
@@ -141,6 +153,7 @@ public class AstroTest extends TestCase {
         assertEquals(expectedAzm, actualAzm, 0.5);
     }
 
+    @Test
     public void testSiriusAlt() {
         Star sirius = new Star("101.2871", "-15.2839", "CMa", "9", "Alp", "Sirius",
                 "-1.46", "A");
@@ -155,6 +168,7 @@ public class AstroTest extends TestCase {
         assertEquals(expectedAlt, actualAlt, 1.5);
     }
 
+    @Test
     public void testEcliptic() {
         double expectedRA[] = {281.2755, 282.3786, 283.4803, 284.5806, 285.6793,
                 286.7764, 287.8716, 288.9650, 290.0563, 291.1455,
@@ -285,14 +299,6 @@ public class AstroTest extends TestCase {
             assertEquals(("i = " + i), expectedDecl[i], actualDecl, 0.05);
             d += 1.0;
         }
-    }
-
-    public static Test suite() {
-        return new TestSuite(AstroTest.class);
-    }
-
-    public static void main(String args[]) {
-        junit.textui.TestRunner.run(suite());
     }
 }
 
