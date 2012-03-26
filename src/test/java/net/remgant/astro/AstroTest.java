@@ -1,6 +1,7 @@
 package net.remgant.astro;
 
 
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Calendar;
@@ -9,6 +10,12 @@ import java.util.TimeZone;
 import static org.junit.Assert.assertEquals;
 
 public class AstroTest {
+
+    @Before
+    public void setup()
+    {
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+    }
     @Test
     public void testTime() {
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
@@ -92,6 +99,40 @@ public class AstroTest {
         double expectedAlt = -17.9570;
         double actualAlt = sun.getAltitude(d, 0.0, lon, lat);
         assertEquals(expectedAlt, actualAlt, 0.01);
+    }
+
+    @Test
+    public void testSunAltNotMidnight() {
+        Sun sun = new Sun();
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+//        Calendar cal = Calendar.getInstance();
+        cal.set(2012, Calendar.MARCH, 26, 14, 35, 0);
+        System.out.println("Time: "+cal.getTime());
+        double d = net.remgant.astro.Time.getDayNumber(cal);
+        double ut = d - Math.floor(d);
+        d = Math.floor(d);
+        double lat = 42.3;
+        double lon = -71.1;
+
+        double expectedAlt = 40.1;
+        double actualAlt = sun.getAltitude(d, ut, lon, lat);
+        assertEquals(expectedAlt, actualAlt, 0.25);
+    }
+
+    @Test
+    public void testSunAzmNotMidnight() {
+        Sun sun = new Sun();
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        cal.set(2012, Calendar.MARCH, 26, 14, 35, 0);
+        double d = net.remgant.astro.Time.getDayNumber(cal);
+        double ut = d - Math.floor(d);
+        d = Math.floor(d);
+        double lat = 42.3;
+        double lon = -71.1;
+
+        double expectedAzm = 133.5;
+        double actualAzm = sun.getAzimuth(d, ut, lon, lat);
+        assertEquals(expectedAzm, actualAzm, 0.15);
     }
 
     @Test
