@@ -25,10 +25,8 @@ public class Uranus extends Planet {
             jup = new Jupiter();
         if (sat == null)
             sat = new Saturn();
-        jup.computePos(d);
-        sat.computePos(d);
-        double Mj = jup.M;
-        double Ms = sat.M;
+        double Mj = jup.computeMeanAnomaly(d);
+        double Ms = sat.computeMeanAnomaly(d);
         double Mu = this.M;
 
         lonecl = lonecl

@@ -22,9 +22,8 @@ public class Jupiter extends Planet {
     void computePertubations(double d) {
         if (sat == null)
             sat = new Saturn();
-        sat.computePos(d);
         double Mj = this.M;
-        double Ms = sat.M;
+        double Ms = sat.computeMeanAnomaly(d);
 
         lonecl = lonecl
                 - 0.332 * Trig.sin(2.0 * Mj - 5.0 * Ms - 67.6)

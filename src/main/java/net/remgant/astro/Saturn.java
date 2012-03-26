@@ -22,8 +22,7 @@ public class Saturn extends Planet {
     void computePertubations(double d) {
         if (jup == null)
             jup = new Jupiter();
-        jup.computePos(d);
-        double Mj = jup.M;
+        double Mj = jup.computeMeanAnomaly(d);
         double Ms = this.M;
 
         lonecl = lonecl

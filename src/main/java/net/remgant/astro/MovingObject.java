@@ -126,6 +126,11 @@ public abstract class MovingObject extends CelestialObject {
         rg = Math.sqrt(xe * xe + ye * ye + ze * ze);
     }
 
+    public double computeMeanAnomaly(double d)
+    {
+        return M0 + M1 * d;
+    }
+
     public double getRA(double t) {
         if (lastD != t) {
             computePos(t);
