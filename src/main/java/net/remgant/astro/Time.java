@@ -27,7 +27,7 @@ public class Time {
         // System.out.println(y+" "+m+" "+D);
         int d = 367 * y - 7 * (y + (m + 9) / 12) / 4 + 275 * m / 9 + D - 730530;
 
-        int h = cal.get(Calendar.HOUR);
+        int h = cal.get(Calendar.HOUR_OF_DAY);
         int M = cal.get(Calendar.MINUTE);
         int s = cal.get(Calendar.SECOND);
 
