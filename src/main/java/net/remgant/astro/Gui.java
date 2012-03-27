@@ -18,6 +18,8 @@ import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.net.URL;
 import java.util.*;
+import java.util.prefs.BackingStoreException;
+import java.util.prefs.Preferences;
 
 public class Gui extends JFrame implements ComponentListener, ActionListener,
         MouseMotionListener, Printable {
@@ -32,9 +34,8 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         System.out.println(System.getProperties().getProperty("os.arch"));
         System.out.println(System.getProperties().getProperty("os.version"));
 
+        @SuppressWarnings({"UnusedDeclaration"})
         Gui frame = new Gui();
-        frame.pack();
-        frame.setVisible(true);
     }
 
     int screenSizeX;
@@ -59,10 +60,39 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
     final static char SYMBOL_SATURN = '\u2644';
     final static char SYMBOL_MERCURY =  '\u263f';
 
+    Preferences preferences;
+    double longitude;
+    double latitude;
+    String locationName;
+
     Gui() {
         super("Remgant Sky Watcher");
-        screenSizeX = 750;
-        screenSizeY = 400;
+
+        UIManager.LookAndFeelInfo lafs[] = UIManager.getInstalledLookAndFeels();
+        for (UIManager.LookAndFeelInfo laf : lafs)
+            System.out.println("Look and Feel: "+laf.getName()+" "+laf.getClassName());
+        System.out.println("Current look and feel: "+UIManager.getLookAndFeel().getName());
+        preferences = Preferences.userNodeForPackage(Gui.class);
+        screenSizeX = preferences.getInt("ScreenSizeX", 750);
+        screenSizeY = preferences.getInt("ScreenSizeY", 400);
+        displayMode = DisplayMode.valueOf(preferences.get("DisplayMode",DisplayMode.FULL_SKY.name()));
+        /*
+           double lon = -71.4750;
+        double lat = 42.4750;
+         */
+        longitude = preferences.getDouble("location.longitude",-71.475);
+        latitude = preferences.getDouble("location.latitude",42.475);
+        locationName = preferences.get("location.name","Boston,MA,USA");
+      /*  pack();
+        setResizable(false);
+        GraphicsConfiguration graphicsConfiguration = getGraphicsConfiguration();
+        Rectangle screenRect = graphicsConfiguration.getBounds();
+        Toolkit toolkit = Toolkit.getDefaultToolkit();
+        Insets desktopInsets = toolkit.getScreenInsets(graphicsConfiguration);
+        Insets frameInsets = getInsets();
+        screenSizeX = screenRect.width - (desktopInsets.left + desktopInsets.right) - (frameInsets.left + frameInsets.right);
+        screenSizeY = screenRect.height - (desktopInsets.top + desktopInsets.bottom) - (frameInsets.top + frameInsets.bottom);
+        setResizable(true);*/
 
         font = new Font(Font.SANS_SERIF,Font.PLAIN,12);
         if (!font.canDisplay(SYMBOL_JUPITER))
@@ -71,7 +101,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
             Font fonts[] = graphicsEnvironment.getAllFonts();
             for (Font f : fonts)
             {
-                if (f.canDisplay('\u2643') && f.getStyle() == Font.PLAIN)
+                if (f.canDisplay(SYMBOL_JUPITER) && f.getStyle() == Font.PLAIN)
                 {
                     font = new Font(f.getFontName(),Font.PLAIN,12);
                     break;
@@ -83,6 +113,11 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         setBounds(0, 0, screenSizeX, screenSizeY);
         addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
+                try {
+                    preferences.sync();
+                } catch (BackingStoreException e1) {
+                    e1.printStackTrace();
+                }
                 System.exit(0);
             }
         });
@@ -113,6 +148,11 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         JMenuItem ExitMenuItem = new JMenuItem("Exit");
         ExitMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                try {
+                    preferences.sync();
+                } catch (BackingStoreException e1) {
+                    e1.printStackTrace();
+                }
                 System.exit(1);
             }
         });
@@ -133,16 +173,16 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         JMenu ModeMenu = new JMenu("Mode");
         myMenuBar.add(ModeMenu);
         JRadioButtonMenuItem fullSkyModeMenuItem =
-                new JRadioButtonMenuItem("Full Sky", true);
+                new JRadioButtonMenuItem("Full Sky", displayMode == DisplayMode.FULL_SKY);
         fullSkyModeMenuItem.addActionListener(this);
         JRadioButtonMenuItem localSkyModeMenuItem =
-                new JRadioButtonMenuItem("Local Sky", false);
+                new JRadioButtonMenuItem("Local Sky", displayMode == DisplayMode.LOCAL_SKY);
         localSkyModeMenuItem.addActionListener(this);
         JRadioButtonMenuItem sunPathModeMenuItem =
-                new JRadioButtonMenuItem("Sun Path", false);
+                new JRadioButtonMenuItem("Sun Path", displayMode == DisplayMode.SUN_PATH);
         sunPathModeMenuItem.addActionListener(this);
         JRadioButtonMenuItem riseSetModeMenuItem =
-                new JRadioButtonMenuItem("Rise/Set",false);
+                new JRadioButtonMenuItem("Rise/Set",displayMode == DisplayMode.RISE_SET);
         riseSetModeMenuItem.addActionListener(this);
         ButtonGroup modeGroup = new ButtonGroup();
         modeGroup.add(fullSkyModeMenuItem);
@@ -177,14 +217,14 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
 
         loadObjects(stars);
 
-        showConBounds = true;
-        showGrid = true;
-        showEcliptic = true;
-        displayMode = DisplayMode.FULL_SKY;
-        rectDisplayMode = true;
-        currentTimeMode = true;
-        maxMagnitude = 4.0;
-        drawScreen(panel,displayMode);
+        showConBounds = preferences.getBoolean("display.showConBounds",true);
+        showGrid = preferences.getBoolean("display.showGrid",true);
+        showEcliptic = preferences.getBoolean("display.showEcliptic",true);
+        rectDisplayMode = preferences.getBoolean("display.rectDisplayMode",true);
+        currentTimeMode = preferences.getBoolean("display.currentTimeMode",true);
+        maxMagnitude = preferences.getDouble("display.maxMagnitude",4.0);
+
+        drawScreen(panel, displayMode);
         // panel.setToolTipText("Tool Tip Text\nSecond Line of Text");
 
         URL iconURL;
@@ -192,8 +232,11 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
             iconURL = getClass().getResource("largeIcon.png");
         else
             iconURL = getClass().getResource("smallIcon.png");
-        Toolkit tk = Toolkit.getDefaultToolkit();
-        setIconImage(tk.createImage(iconURL));
+        Toolkit toolkit = Toolkit.getDefaultToolkit();
+        setIconImage(toolkit.createImage(iconURL));
+
+        pack();
+        setVisible(true);
     }
 
     private void editProperties() {
@@ -263,6 +306,10 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
                     maxMagnitude = Double.parseDouble(maxMagnitudeField.getText());
                     drawScreen(panel,displayMode);
                     d.dispose();
+                    preferences.putBoolean("display.showConBounds",showConBounds);
+                    preferences.putBoolean("display.showGrid",showGrid);
+                    preferences.putBoolean("display.showEcliptic",showEcliptic);
+                    preferences.putDouble("display.maxMagnitude",maxMagnitude);
                 }
             }
         });
@@ -887,6 +934,8 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         Dimension size = new Dimension(screenSizeX, screenSizeY);
         panel.resizeImage(size);
         drawScreen(panel,displayMode);
+        preferences.putInt("ScreenSizeX",screenSizeX);
+        preferences.putInt("ScreenSizeY",screenSizeY);
     }
 
     public void componentShown(ComponentEvent e) {
@@ -903,6 +952,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         } else if (e.getActionCommand().equals("Rise/Set"))
             displayMode =DisplayMode.RISE_SET;
         drawScreen(panel,displayMode);
+        preferences.put("DisplayMode",displayMode.name());
     }
 
     // Next two are required for MouseMotionListener
@@ -926,10 +976,6 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         Rectangle2D bounds = drawable.getBounds2D();
         double ut = point.getX() / bounds.getWidth();
 
-        double lon = -71.4750;
-        double lat = 42.4750;
-
-
         Graphics2D g = drawable.createGraphics();
         FontRenderContext fontRenderContext = g.getFontRenderContext();
         double w = drawable.getWidth2D();
@@ -947,8 +993,8 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
 
         for (int i=0; i<mo.length; i++)
         {
-            double az = mo[i].getAzimuth(d, ut, lon, lat);
-            double alt = mo[i].getAltitude(d, ut, lon, lat);
+            double az = mo[i].getAzimuth(d, ut, longitude, latitude);
+            double alt = mo[i].getAltitude(d, ut, longitude, latitude);
             p = getRectCoordinates2D(az, alt, bounds);
             if (p == null)
                 continue;
