@@ -5,10 +5,9 @@ import net.remgant.gui.DecimalField;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.geom.Ellipse2D;
-import java.awt.geom.Line2D;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
+import java.awt.font.FontRenderContext;
+import java.awt.font.GlyphVector;
+import java.awt.geom.*;
 import java.awt.image.BufferedImage;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
@@ -48,13 +47,38 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
     boolean rectDisplayMode;
     boolean currentTimeMode;
     double maxMagnitude;
-    enum DisplayMode{FULL_SKY,LOCAL_SKY,SUN_PATH}
+    enum DisplayMode{FULL_SKY,LOCAL_SKY,SUN_PATH,RISE_SET}
     DisplayMode displayMode;
+    Font font;
+
+    final static char SYMBOL_MOON = '\u263e';
+    final static char SYMBOL_SUN = '\u2609';
+    final static char SYMBOL_VENUS = '\u2640';
+    final static char SYMBOL_MARS = '\u2642';
+    final static char SYMBOL_JUPITER = '\u2643';
+    final static char SYMBOL_SATURN = '\u2644';
+    final static char SYMBOL_MERCURY =  '\u263f';
 
     Gui() {
         super("Remgant Sky Watcher");
         screenSizeX = 750;
         screenSizeY = 400;
+
+        font = new Font(Font.SANS_SERIF,Font.PLAIN,12);
+        if (!font.canDisplay(SYMBOL_JUPITER))
+        {
+            GraphicsEnvironment graphicsEnvironment = GraphicsEnvironment.getLocalGraphicsEnvironment();
+            Font fonts[] = graphicsEnvironment.getAllFonts();
+            for (Font f : fonts)
+            {
+                if (f.canDisplay('\u2643') && f.getStyle() == Font.PLAIN)
+                {
+                    font = new Font(f.getFontName(),Font.PLAIN,12);
+                    break;
+                }
+            }
+        }
+        System.out.println("using font "+font);
 
         setBounds(0, 0, screenSizeX, screenSizeY);
         addWindowListener(new WindowAdapter() {
@@ -117,13 +141,18 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         JRadioButtonMenuItem sunPathModeMenuItem =
                 new JRadioButtonMenuItem("Sun Path", false);
         sunPathModeMenuItem.addActionListener(this);
+        JRadioButtonMenuItem riseSetModeMenuItem =
+                new JRadioButtonMenuItem("Rise/Set",false);
+        riseSetModeMenuItem.addActionListener(this);
         ButtonGroup modeGroup = new ButtonGroup();
         modeGroup.add(fullSkyModeMenuItem);
         modeGroup.add(localSkyModeMenuItem);
         modeGroup.add(sunPathModeMenuItem);
+        modeGroup.add(riseSetModeMenuItem);
         ModeMenu.add(fullSkyModeMenuItem);
         ModeMenu.add(localSkyModeMenuItem);
         ModeMenu.add(sunPathModeMenuItem);
+        ModeMenu.add(riseSetModeMenuItem);
 
         JMenu HelpMenu = new JMenu("Help");
         myMenuBar.add(HelpMenu);
@@ -142,7 +171,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         getContentPane().add("Center", panel);
         panel.setPreferredSize(size);
         panel.addComponentListener(this);
-        // panel.addMouseMotionListener(this);
+        panel.addMouseMotionListener(this);
 
         stars = new HashSet<Star>();
 
@@ -356,6 +385,9 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
                 break;
             case SUN_PATH:
                 drawSunPathScreen();
+                break;
+            case RISE_SET:
+                drawRiseSetScreen(drawable);
                 break;
         }
         panel.repaint();
@@ -593,6 +625,18 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
             }
         }
     }
+
+    private void drawRiseSetScreen(Drawable drawable) {
+        fillScreen(drawable,drawable.getBounds2D(),Color.GRAY);
+        double w = drawable.getWidth2D();
+        double h = drawable.getHeight2D() * 0.1;
+        Graphics2D g = drawable.createGraphics();
+        double x = 0.0;
+        double y = drawable.getHeight2D() - h;
+        g.setColor(Color.WHITE);
+        g.fill(new Rectangle2D.Double(x,y,w,h));
+    }
+
 
     private Point getRectCoordinates(double az, double alt) {
         int x = (int) (az / 360.0 * (double) screenSizeX);
@@ -856,7 +900,8 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
             displayMode = DisplayMode.LOCAL_SKY;
         } else if (e.getActionCommand().equals("Sun Path")) {
             displayMode = DisplayMode.SUN_PATH;
-        }
+        } else if (e.getActionCommand().equals("Rise/Set"))
+            displayMode =DisplayMode.RISE_SET;
         drawScreen(panel,displayMode);
     }
 
@@ -866,7 +911,76 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
     }
 
     public void mouseMoved(MouseEvent e) {
-        System.out.println(e);
+        if (displayMode == DisplayMode.RISE_SET)
+        {
+            positionCursor(panel,e.getLocationOnScreen());
+            drawPlanets(panel,e.getLocationOnScreen());
+            panel.repaint();
+        }
+    }
+
+    private void drawPlanets(Drawable drawable, Point point) {
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        cal.set(2012,Calendar.MARCH,26,0,0,0);
+        double d = Math.floor(net.remgant.astro.Time.getDayNumber(cal));
+        Rectangle2D bounds = drawable.getBounds2D();
+        double ut = point.getX() / bounds.getWidth();
+
+        double lon = -71.4750;
+        double lat = 42.4750;
+
+
+        Graphics2D g = drawable.createGraphics();
+        FontRenderContext fontRenderContext = g.getFontRenderContext();
+        double w = drawable.getWidth2D();
+        double h = drawable.getHeight2D() * 0.9;
+        double x = 0.0;
+        double y = 0.0;
+        g.setColor(Color.GRAY);
+        g.fill(new Rectangle2D.Double(x,y,w,h));
+
+        Point2D p;
+        MovingObject mo[] = new MovingObject[]{new Moon(),new Sun(),new Venus(),new Mars(),new Jupiter(),new Saturn(),new Mercury()};
+        Color colors[] = new Color[]{Color.WHITE,Color.YELLOW,Color.WHITE,Color.RED,Color.MAGENTA,Color.ORANGE,Color.BLACK};
+        char symbols[] = new char[]{SYMBOL_MOON,SYMBOL_SUN,SYMBOL_VENUS,SYMBOL_MARS,SYMBOL_JUPITER,SYMBOL_SATURN,SYMBOL_MERCURY};
+        double minSize[] = new double[]{6.0,6.0,2.0,2.0,2.0,2.0,2.0};
+
+        for (int i=0; i<mo.length; i++)
+        {
+            double az = mo[i].getAzimuth(d, ut, lon, lat);
+            double alt = mo[i].getAltitude(d, ut, lon, lat);
+            p = getRectCoordinates2D(az, alt, bounds);
+            if (p == null)
+                continue;
+            GlyphVector gv = font.createGlyphVector(fontRenderContext,Character.toString(symbols[i]));
+            Area a = new Area(gv.getOutline());
+            a.transform(AffineTransform.getTranslateInstance(p.getX(),p.getY()));
+            g.setColor(colors[i]);
+            g.fill(new Ellipse2D.Double(p.getX(),p.getY(),minSize[i],minSize[i]));
+            g.setColor(Color.BLACK);
+            g.fill(a);
+
+        }
+        System.out.println();
+    }
+
+    private void positionCursor(Drawable drawable, Point point) {
+        Rectangle2D bounds = drawable.getBounds2D();
+        if (point.getX() > bounds.getWidth())
+            return;
+        double w = drawable.getWidth2D();
+        double h = drawable.getHeight2D() * 0.1;
+        Graphics2D g = drawable.createGraphics();
+        double x = 0.0;
+        double y = drawable.getHeight2D() - h;
+        if (point.getY() < y)
+            return;
+        g.setColor(Color.WHITE);
+        g.fill(new Rectangle2D.Double(x,y,w,h));
+
+        Rectangle2D cursor = new Rectangle2D.Double(point.getX(),y,1.0,h);
+        g.setColor(Color.BLACK);
+        g.fill(cursor);
     }
 
     // Required for Printable interface
