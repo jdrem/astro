@@ -3,6 +3,7 @@ package net.remgant.astro;
 public class Pluto extends Planet {
     public Pluto() {
         name = "Pluto";
+        symbol ="\u2647";
     }
 
     void computePos(double d) {

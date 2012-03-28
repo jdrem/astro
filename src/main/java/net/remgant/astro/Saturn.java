@@ -15,6 +15,7 @@ public class Saturn extends Planet {
         M0 = 316.9670;
         M1 = 0.0334442282;
         name = "Saturn";
+        symbol = "\u2644";
     }
 
     private Jupiter jup;

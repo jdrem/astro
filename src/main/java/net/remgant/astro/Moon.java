@@ -14,6 +14,7 @@ public class Moon extends Planet {
         M0 = 115.3654;
         M1 = 13.0649929509;
         name = "Moon";
+        symbol = "\u263e";
     }
 
 

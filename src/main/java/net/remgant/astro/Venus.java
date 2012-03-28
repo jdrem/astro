@@ -15,6 +15,7 @@ public class Venus extends Planet {
         M0 = 48.0052;
         M1 = 1.6021302244;
         name = "Venus";
+        symbol = "\u2640";
     }
 
     void computePertubations(double d) {

@@ -6,6 +6,7 @@ public abstract class CelestialObject
     protected double RA;
     protected double decl;
     protected String name;
+    protected String symbol = "";
 
     abstract public double getRA(double t);
 
@@ -68,6 +69,11 @@ public abstract class CelestialObject
             return alt - 360.0;
         else
             return alt;
+    }
+
+    public String getSymbol()
+    {
+        return symbol;
     }
 
     @Override

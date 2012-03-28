@@ -3,6 +3,7 @@ package net.remgant.astro;
 public class Sun extends MovingObject {
     public Sun() {
         name = "Sun";
+        symbol = "\u2609";
         N0 = N1 = 0.0;
         i0 = i1 = 0.0;
         w0 = 282.9404;

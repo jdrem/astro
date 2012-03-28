@@ -15,6 +15,7 @@ public class Mars extends Planet {
         M0 = 18.6021;
         M1 = 0.5240207766;
         name = "Mars";
+        symbol = "\u2642";
     }
 
     void computePertubations(double d) {

@@ -14,6 +14,8 @@ public class Mercury extends Planet {
         e1 = 5.59E-10;
         M0 = 168.6562;
         M1 = 4.0923344368;
+        name = "Mercury";
+        symbol = "\u263f";
     }
 
     void computePertubations(double d) {

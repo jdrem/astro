@@ -15,6 +15,7 @@ public class Uranus extends Planet {
         M0 = 142.5905;
         M1 = 0.011725806;
         name = "Uranus";
+        symbol = "\u2645";
     }
 
     private Jupiter jup;

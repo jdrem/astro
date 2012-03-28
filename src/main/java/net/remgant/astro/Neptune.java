@@ -15,6 +15,7 @@ public class Neptune extends Planet {
         M0 = 260.2471;
         M1 = 0.005995147;
         name = "Neptune";
+        symbol = "\u2646";
     }
 
 
