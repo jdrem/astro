@@ -48,17 +48,9 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
     boolean rectDisplayMode;
     boolean currentTimeMode;
     double maxMagnitude;
-    enum DisplayMode{FULL_SKY,LOCAL_SKY,SUN_PATH,RISE_SET}
+    enum DisplayMode{FULL_SKY,LOCAL_SKY,SUN_PATH,RISE_SET,PLANET_PATH}
     DisplayMode displayMode;
     Font font;
-
-    final static char SYMBOL_MOON = '\u263e';
-    final static char SYMBOL_SUN = '\u2609';
-    final static char SYMBOL_VENUS = '\u2640';
-    final static char SYMBOL_MARS = '\u2642';
-    final static char SYMBOL_JUPITER = '\u2643';
-    final static char SYMBOL_SATURN = '\u2644';
-    final static char SYMBOL_MERCURY =  '\u263f';
 
     Preferences preferences;
     double longitude;
@@ -76,10 +68,6 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         screenSizeX = preferences.getInt("ScreenSizeX", 750);
         screenSizeY = preferences.getInt("ScreenSizeY", 400);
         displayMode = DisplayMode.valueOf(preferences.get("DisplayMode",DisplayMode.FULL_SKY.name()));
-        /*
-           double lon = -71.4750;
-        double lat = 42.4750;
-         */
         longitude = preferences.getDouble("location.longitude",-71.475);
         latitude = preferences.getDouble("location.latitude",42.475);
         locationName = preferences.get("location.name","Boston,MA,USA");
@@ -95,13 +83,14 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         setResizable(true);*/
 
         font = new Font(Font.SANS_SERIF,Font.PLAIN,12);
-        if (!font.canDisplay(SYMBOL_JUPITER))
+        char symbol = (new Jupiter()).getSymbol().charAt(0);
+        if (!font.canDisplay(symbol))
         {
             GraphicsEnvironment graphicsEnvironment = GraphicsEnvironment.getLocalGraphicsEnvironment();
             Font fonts[] = graphicsEnvironment.getAllFonts();
             for (Font f : fonts)
             {
-                if (f.canDisplay(SYMBOL_JUPITER) && f.getStyle() == Font.PLAIN)
+                if (f.canDisplay(symbol) && f.getStyle() == Font.PLAIN)
                 {
                     font = new Font(f.getFontName(),Font.PLAIN,12);
                     break;
@@ -184,15 +173,20 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         JRadioButtonMenuItem riseSetModeMenuItem =
                 new JRadioButtonMenuItem("Rise/Set",displayMode == DisplayMode.RISE_SET);
         riseSetModeMenuItem.addActionListener(this);
+        JRadioButtonMenuItem planetPathModeMenuItem =
+                new JRadioButtonMenuItem("Planet Path",displayMode == DisplayMode.PLANET_PATH);
+        planetPathModeMenuItem.addActionListener(this);
         ButtonGroup modeGroup = new ButtonGroup();
         modeGroup.add(fullSkyModeMenuItem);
         modeGroup.add(localSkyModeMenuItem);
         modeGroup.add(sunPathModeMenuItem);
         modeGroup.add(riseSetModeMenuItem);
+        modeGroup.add(planetPathModeMenuItem);
         ModeMenu.add(fullSkyModeMenuItem);
         ModeMenu.add(localSkyModeMenuItem);
         ModeMenu.add(sunPathModeMenuItem);
         ModeMenu.add(riseSetModeMenuItem);
+        ModeMenu.add(planetPathModeMenuItem);
 
         JMenu HelpMenu = new JMenu("Help");
         myMenuBar.add(HelpMenu);
@@ -436,6 +430,9 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
             case RISE_SET:
                 drawRiseSetScreen(drawable);
                 break;
+            case PLANET_PATH:
+                drawPlanetPathScreen(drawable);
+                break;
         }
         panel.repaint();
     }
@@ -460,6 +457,39 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         drawStars(drawable);
         if (showEcliptic)
             drawEcliptic(drawable);
+    }
+
+    private void drawPlanetPathScreen(Drawable drawable) {
+        Graphics2D g = drawable.createGraphics();
+        double width = drawable.getWidth2D();
+        double height = drawable.getHeight2D();
+        System.out.printf("w = %f, h = %f%n",width,height);
+        MovingObject planets[] = new MovingObject[]{new Moon(),new Sun(),new Venus(),new Mars(),new Jupiter(),new Saturn(),new Mercury()};
+        Color colors[] = new Color[]{Color.WHITE,Color.YELLOW,Color.WHITE,Color.RED,Color.MAGENTA,Color.ORANGE,Color.GRAY};
+        g.setColor(drawable.isBW()?Color.BLACK:Color.YELLOW);
+        Sun sun = new Sun();
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        cal.set(2012, Calendar.MARCH, 21, 0, 0);
+        for (int j=0; j<planets.length; j++)
+        {
+            if (j != 2 && j != 3 && j != 6)
+                continue;
+            double d = net.remgant.astro.Time.getDayNumber(cal);
+            g.setColor(drawable.isBW()?Color.BLACK:colors[j]);
+//            for (int i = 0; i < 3650; i++) {
+//                d = d + (double) i / 10.0;
+             for (int i = 0; i < 365; i++) {
+                d = d + 1.0;
+                double ra = planets[j].getRA(d);
+                double decl = planets[j].getDecl(d);
+                if (decl >= 180.0)
+                    decl = decl - 360.0;
+                double x = width - (ra / 360.0 *  width);
+                double y =  (((90.0 - decl) / 180.0) *  height);
+                g.fill(new Ellipse2D.Double(x,y,2.0,2.0));
+            }
+        }
+
     }
 
     private void drawStars(Drawable d)
@@ -949,8 +979,11 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
             displayMode = DisplayMode.LOCAL_SKY;
         } else if (e.getActionCommand().equals("Sun Path")) {
             displayMode = DisplayMode.SUN_PATH;
-        } else if (e.getActionCommand().equals("Rise/Set"))
+        } else if (e.getActionCommand().equals("Rise/Set")) {
             displayMode =DisplayMode.RISE_SET;
+        } else if (e.getActionCommand().equals("Planet Path")) {
+            displayMode =DisplayMode.PLANET_PATH;
+        }
         drawScreen(panel,displayMode);
         preferences.put("DisplayMode",displayMode.name());
     }
@@ -971,7 +1004,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
 
     private void drawPlanets(Drawable drawable, Point point) {
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        cal.set(2012,Calendar.MARCH,26,0,0,0);
+        cal.set(1991,Calendar.JUNE,23,0,0,0);
         double d = Math.floor(net.remgant.astro.Time.getDayNumber(cal));
         Rectangle2D bounds = drawable.getBounds2D();
         double ut = point.getX() / bounds.getWidth();
@@ -988,7 +1021,6 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         Point2D p;
         MovingObject mo[] = new MovingObject[]{new Moon(),new Sun(),new Venus(),new Mars(),new Jupiter(),new Saturn(),new Mercury()};
         Color colors[] = new Color[]{Color.WHITE,Color.YELLOW,Color.WHITE,Color.RED,Color.MAGENTA,Color.ORANGE,Color.BLACK};
-        char symbols[] = new char[]{SYMBOL_MOON,SYMBOL_SUN,SYMBOL_VENUS,SYMBOL_MARS,SYMBOL_JUPITER,SYMBOL_SATURN,SYMBOL_MERCURY};
         double minSize[] = new double[]{6.0,6.0,2.0,2.0,2.0,2.0,2.0};
 
         for (int i=0; i<mo.length; i++)
@@ -998,7 +1030,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
             p = getRectCoordinates2D(az, alt, bounds);
             if (p == null)
                 continue;
-            GlyphVector gv = font.createGlyphVector(fontRenderContext,Character.toString(symbols[i]));
+            GlyphVector gv = font.createGlyphVector(fontRenderContext,mo[i].getSymbol());
             Area a = new Area(gv.getOutline());
             a.transform(AffineTransform.getTranslateInstance(p.getX(),p.getY()));
             g.setColor(colors[i]);
