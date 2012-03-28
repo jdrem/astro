@@ -84,7 +84,7 @@ public abstract class MovingObject extends CelestialObject {
         // compute the true anomaly
         v = Trig.atan2(yv, xv);
         // compute the distance
-        r = Math.sqrt(xv * yv + yv * yv);
+        r = Math.sqrt(xv * xv + yv * yv);
 
         // compute the heliocentric position in space
         xh = r * (Trig.cos(N) * Trig.cos(v + w) -
