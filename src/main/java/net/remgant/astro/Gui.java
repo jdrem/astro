@@ -1,8 +1,11 @@
 package net.remgant.astro;
 
 import net.remgant.gui.DecimalField;
+import net.remgant.gui.IntegerField;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.font.FontRenderContext;
@@ -56,14 +59,11 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
     double longitude;
     double latitude;
     String locationName;
+    Calendar displayDate;
 
     Gui() {
         super("Remgant Sky Watcher");
 
-        UIManager.LookAndFeelInfo lafs[] = UIManager.getInstalledLookAndFeels();
-        for (UIManager.LookAndFeelInfo laf : lafs)
-            System.out.println("Look and Feel: "+laf.getName()+" "+laf.getClassName());
-        System.out.println("Current look and feel: "+UIManager.getLookAndFeel().getName());
         preferences = Preferences.userNodeForPackage(Gui.class);
         screenSizeX = preferences.getInt("ScreenSizeX", 750);
         screenSizeY = preferences.getInt("ScreenSizeY", 400);
@@ -71,6 +71,17 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         longitude = preferences.getDouble("location.longitude",-71.475);
         latitude = preferences.getDouble("location.latitude",42.475);
         locationName = preferences.get("location.name","Boston,MA,USA");
+        currentTimeMode = preferences.getBoolean("date.useCurrentTime",true);
+        displayDate = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        displayDate.setTime(new java.util.Date());
+        int displayDateYear = preferences.getInt("date.year",displayDate.get(Calendar.YEAR));
+        int displayDateMonth = preferences.getInt("date.month",displayDate.get(Calendar.MONTH));
+        int displayDateDay = preferences.getInt("date.day_of_month",displayDate.get(Calendar.DAY_OF_MONTH));
+        displayDate.setTime(new java.util.Date(0L));
+        displayDate.set(Calendar.YEAR,displayDateYear);
+        displayDate.set(Calendar.MONTH,displayDateMonth);
+        displayDate.set(Calendar.DAY_OF_MONTH,displayDateDay);
+
       /*  pack();
         setResizable(false);
         GraphicsConfiguration graphicsConfiguration = getGraphicsConfiguration();
@@ -158,6 +169,23 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         });
         EditMenu.add(propertiesItem);
 
+        JMenuItem dateMenuItem = new JMenuItem("Date");
+        dateMenuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                editDate();
+            }
+        });
+        EditMenu.add(dateMenuItem);
+
+        JMenuItem locationMenuItem = new JMenuItem("Location");
+        locationMenuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                //To change body of implemented methods use File | Settings | File Templates.
+            }
+        });
+        EditMenu.add(locationMenuItem);
 
         JMenu ModeMenu = new JMenu("Mode");
         myMenuBar.add(ModeMenu);
@@ -215,7 +243,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         showGrid = preferences.getBoolean("display.showGrid",true);
         showEcliptic = preferences.getBoolean("display.showEcliptic",true);
         rectDisplayMode = preferences.getBoolean("display.rectDisplayMode",true);
-        currentTimeMode = preferences.getBoolean("display.currentTimeMode",true);
+        //currentTimeMode = preferences.getBoolean("display.currentTimeMode",true);
         maxMagnitude = preferences.getDouble("display.maxMagnitude",4.0);
 
         drawScreen(panel, displayMode);
@@ -413,6 +441,135 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         d.setVisible(true);
     }
 
+    private void editDate()
+    {
+        final JDialog d = new JDialog(Gui.this, "Date", true);
+        Container cp = d.getContentPane();
+        cp.setLayout(new GridBagLayout());
+
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.BOTH;
+        JPanel panels[] = new JPanel[5];
+        for (int i = 0; i < 5; i++) {
+            panels[i] = new JPanel();
+            panels[i].setLayout(new BorderLayout());
+            c.gridx = 0;
+            c.gridy = i;
+            cp.add(panels[i], c);
+        }
+        c.gridwidth = 1;
+        c.gridheight = 1;
+
+        final JRadioButton currentTimeButton =
+                new JRadioButton("Use Current Time", currentTimeMode);
+        final JRadioButton setTimeButton =
+                new JRadioButton("Set Time", !currentTimeMode);
+        ButtonGroup group2 = new ButtonGroup();
+        group2.add(currentTimeButton);
+        group2.add(setTimeButton);
+        panels[0].add(currentTimeButton, BorderLayout.WEST);
+        panels[0].add(setTimeButton, BorderLayout.EAST);
+
+        JLabel yearLabel = new JLabel("Year");
+        panels[1].add(yearLabel,BorderLayout.WEST);
+        String year = Integer.toString(displayDate.get(Calendar.YEAR));
+        final JTextField yearField = new IntegerField(year,4);
+        yearField.setEditable(!currentTimeMode);
+        panels[1].add(yearField,BorderLayout.EAST);
+
+        JLabel monthLabel = new JLabel("Month");
+        panels[2].add(monthLabel,BorderLayout.WEST);
+        String month = Integer.toString(displayDate.get(Calendar.MONTH)+1);
+        final JTextField monthField = new IntegerField(month,4);
+        monthField.setEditable(!currentTimeMode);
+        panels[2].add(monthField,BorderLayout.EAST);
+
+        JLabel dayLabel = new JLabel("Day");
+        panels[3].add(dayLabel,BorderLayout.WEST);
+        String day = Integer.toString(displayDate.get(Calendar.DAY_OF_MONTH));
+        final JTextField dayField = new IntegerField(day,4);
+        dayField.setEditable(!currentTimeMode);
+        panels[3].add(dayField,BorderLayout.EAST);
+
+        currentTimeButton.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                System.out.println("currentTimeButton: "+currentTimeButton.isSelected());
+                yearField.setEditable(!currentTimeButton.isSelected());
+                monthField.setEditable(!currentTimeButton.isSelected());
+                dayField.setEditable(!currentTimeButton.isSelected());
+                if (currentTimeButton.isSelected())
+                {
+                    Calendar now = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+                     now.setTime(new java.util.Date());
+                    yearField.setText(Integer.toString(now.get(Calendar.YEAR)));
+                    monthField.setText(Integer.toString(now.get(Calendar.MONTH)+1));
+                    dayField.setText(Integer.toString(now.get(Calendar.DAY_OF_MONTH)));
+                }
+            }
+        });
+
+
+        JButton okButton = new JButton("OK");
+        c.gridx = 0;
+        c.gridy = 0;
+        panels[4].add(okButton, BorderLayout.WEST);
+        okButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                {
+                    int newYear = Integer.parseInt(yearField.getText());
+                    int newMonth = Integer.parseInt(monthField.getText()) - 1;
+                    int newDay = Integer.parseInt(dayField.getText());
+                    Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+                    cal.set(Calendar.YEAR,newYear);
+                    if (newMonth < cal.getMinimum(Calendar.MONTH) || newMonth > cal.getActualMaximum(Calendar.MONTH))
+                    {
+                        JOptionPane.showMessageDialog(d, "Invalid month: "+monthField.getText(),
+                            "Date Error",
+                            JOptionPane.ERROR_MESSAGE);
+                         return;
+                    }
+                    cal.set(Calendar.MONTH,newMonth);
+                    if (newDay < cal.getMinimum(Calendar.DAY_OF_MONTH) || newDay > cal.getActualMaximum(Calendar.DAY_OF_MONTH))
+                    {
+                        JOptionPane.showMessageDialog(d, "Invalid dat: "+dayField.getText(),
+                            "Date Error",
+                            JOptionPane.ERROR_MESSAGE);
+                         return;
+                    }
+                    displayDate.set(Calendar.YEAR,newYear);
+                    displayDate.set(Calendar.MONDAY,newMonth);
+                    displayDate.set(Calendar.DAY_OF_MONTH,newDay);
+                    currentTimeMode = currentTimeButton.isSelected();
+                    preferences.putBoolean("date.useCurrentTime",currentTimeMode);
+                    preferences.putInt("date.year",newYear);
+                    preferences.putInt("date.month",newMonth);
+                    preferences.putInt("date.day_of_month",newDay);
+                    d.dispose();
+                }
+            }
+        });
+
+        JButton cancelButton = new JButton("Cancel");
+        c.gridx = 2;
+        c.gridy = 0;
+        panels[4].add(cancelButton, BorderLayout.EAST);
+        cancelButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                d.dispose();
+            }
+        });
+
+
+        d.addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                e.getWindow().dispose();
+            }
+        });
+        d.setBounds(0, 0, 300, 175);
+        d.setVisible(true);
+    }
+
     private void drawScreen(Drawable drawable,DisplayMode displayMode)
     {
         clearScreen(drawable, drawable.getBounds2D());
@@ -584,13 +741,13 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
 
     private void drawLocalScreen(Drawable drawable)
     {
-        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        //cal.set(2002, Calendar.FEBRUARY, 16, 0, 0, 0);
-        cal.set(2012,Calendar.MARCH,26,14,54,0);
-        //cal.setTime(new Date());
-        System.out.println("Cal: "+cal.getTime());
+//        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+//        //cal.set(2002, Calendar.FEBRUARY, 16, 0, 0, 0);
+//        cal.set(2012,Calendar.MARCH,26,14,54,0);
+//        //cal.setTime(new Date());
+        System.out.println("Cal: "+displayDate.getTime());
         System.out.println("Now: "+new Date());
-        double d = net.remgant.astro.Time.getDayNumber(cal);
+        double d = net.remgant.astro.Time.getDayNumber(displayDate);
         double ut = d - Math.floor(d);
         d = Math.floor(d);
         System.out.println(d);
@@ -1003,9 +1160,9 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
     }
 
     private void drawPlanets(Drawable drawable, Point point) {
-        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        cal.set(1991,Calendar.JUNE,23,0,0,0);
-        double d = Math.floor(net.remgant.astro.Time.getDayNumber(cal));
+//        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+//        cal.set(1991,Calendar.JUNE,23,0,0,0);
+        double d = Math.floor(net.remgant.astro.Time.getDayNumber(displayDate));
         Rectangle2D bounds = drawable.getBounds2D();
         double ut = point.getX() / bounds.getWidth();
 
