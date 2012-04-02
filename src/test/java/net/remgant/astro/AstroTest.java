@@ -8,6 +8,7 @@ import java.util.Calendar;
 import java.util.TimeZone;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 public class AstroTest {
 
@@ -209,6 +210,16 @@ public class AstroTest {
         assertEquals(expectedAlt, actualAlt, 1.5);
     }
 
+    @Test
+    public void testMarsPath()
+    {
+        Mars mars = new Mars();
+        double d = 4700.0;
+        double ra = mars.getRA(d);
+        double decl = mars.getDecl(d);
+        assertFalse("unexpected NaN for ra",Double.isNaN(ra));
+        assertFalse("unexpected NaN for decl", Double.isNaN(decl));
+    }
     @Test
     public void testEcliptic() {
         double expectedRA[] = {281.2755, 282.3786, 283.4803, 284.5806, 285.6793,
