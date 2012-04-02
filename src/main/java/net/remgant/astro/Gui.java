@@ -23,6 +23,8 @@ import java.net.URL;
 import java.util.*;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Gui extends JFrame implements ComponentListener, ActionListener,
         MouseMotionListener, Printable {
@@ -60,6 +62,8 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
     double latitude;
     String locationName;
     Calendar displayDate;
+    Map<String,Location> locationMap;
+    Location currentLocation;
 
     Gui() {
         super("Remgant Sky Watcher");
@@ -68,9 +72,9 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         screenSizeX = preferences.getInt("ScreenSizeX", 750);
         screenSizeY = preferences.getInt("ScreenSizeY", 400);
         displayMode = DisplayMode.valueOf(preferences.get("DisplayMode",DisplayMode.FULL_SKY.name()));
-        longitude = preferences.getDouble("location.longitude",-71.475);
-        latitude = preferences.getDouble("location.latitude",42.475);
-        locationName = preferences.get("location.name","Boston,MA,USA");
+        longitude = preferences.getDouble("location.longitude",-71.1);
+        latitude = preferences.getDouble("location.latitude",42.3);
+        locationName = preferences.get("location.name","Boston, MA, USA");
         currentTimeMode = preferences.getBoolean("date.useCurrentTime",true);
         displayDate = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         displayDate.setTime(new java.util.Date());
@@ -82,6 +86,10 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         displayDate.set(Calendar.MONTH,displayDateMonth);
         displayDate.set(Calendar.DAY_OF_MONTH,displayDateDay);
 
+        locationMap = loadLocations();
+        currentLocation = locationMap.get("Boston, MA, USA");
+        if (currentLocation == null)
+            currentLocation = new Location("Boston, MA, USA",-71.1,42.3);
       /*  pack();
         setResizable(false);
         GraphicsConfiguration graphicsConfiguration = getGraphicsConfiguration();
@@ -182,7 +190,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         locationMenuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                //To change body of implemented methods use File | Settings | File Templates.
+                editLocation();
             }
         });
         EditMenu.add(locationMenuItem);
@@ -541,12 +549,69 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
                     displayDate.set(Calendar.MONDAY,newMonth);
                     displayDate.set(Calendar.DAY_OF_MONTH,newDay);
                     currentTimeMode = currentTimeButton.isSelected();
-                    preferences.putBoolean("date.useCurrentTime",currentTimeMode);
-                    preferences.putInt("date.year",newYear);
-                    preferences.putInt("date.month",newMonth);
-                    preferences.putInt("date.day_of_month",newDay);
+                    preferences.putBoolean("date.useCurrentTime", currentTimeMode);
+                    preferences.putInt("date.year", newYear);
+                    preferences.putInt("date.month", newMonth);
+                    preferences.putInt("date.day_of_month", newDay);
                     d.dispose();
                 }
+            }
+        });
+
+        JButton cancelButton = new JButton("Cancel");
+        c.gridx = 2;
+        c.gridy = 0;
+        panels[4].add(cancelButton, BorderLayout.EAST);
+        cancelButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                d.dispose();
+            }
+        });
+
+
+        d.addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                e.getWindow().dispose();
+            }
+        });
+        d.setBounds(0, 0, 300, 175);
+        d.setVisible(true);
+    }
+
+    private void editLocation()
+    {
+        final JDialog d = new JDialog(Gui.this, "Date", true);
+        Container cp = d.getContentPane();
+        cp.setLayout(new GridBagLayout());
+
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.BOTH;
+        JPanel panels[] = new JPanel[5];
+        for (int i = 0; i < 5; i++) {
+            panels[i] = new JPanel();
+            panels[i].setLayout(new BorderLayout());
+            c.gridx = 0;
+            c.gridy = i;
+            cp.add(panels[i], c);
+        }
+        c.gridwidth = 1;
+        c.gridheight = 1;
+
+        DefaultComboBoxModel model = new DefaultComboBoxModel(locationMap.values().toArray());
+        model.setSelectedItem(currentLocation);
+        JComboBox locationList = new JComboBox(model);
+        locationList.setEditable(true);
+        panels[0].add(locationList,BorderLayout.CENTER);
+
+
+        JButton okButton = new JButton("OK");
+        c.gridx = 0;
+        c.gridy = 0;
+        panels[4].add(okButton, BorderLayout.WEST);
+        okButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+
+                    d.dispose();
             }
         });
 
@@ -1121,8 +1186,8 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         Dimension size = new Dimension(screenSizeX, screenSizeY);
         panel.resizeImage(size);
         drawScreen(panel,displayMode);
-        preferences.putInt("ScreenSizeX",screenSizeX);
-        preferences.putInt("ScreenSizeY",screenSizeY);
+        preferences.putInt("ScreenSizeX", screenSizeX);
+        preferences.putInt("ScreenSizeY", screenSizeY);
     }
 
     public void componentShown(ComponentEvent e) {
@@ -1230,5 +1295,77 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
                 (int) pf.getImageableY());
         drawScreen(page,DisplayMode.FULL_SKY);
         return Printable.PAGE_EXISTS;
+    }
+
+    private Map<String,Location> loadLocations()
+    {
+        Map<String,Location> map = new TreeMap<String,Location>();
+        try {
+            BufferedReader in = new BufferedReader(new InputStreamReader(getClass().getResource("locations.dat").openStream()));
+            String line = in.readLine();
+            while (line != null)
+            {
+                Location location = Location.parse(line);
+                if (location != null)
+                    map.put(location.name,location);
+                line = in.readLine();
+            }
+        } catch (EOFException ignored) {
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return map;
+    }
+
+    static class Location
+    {
+        String name;
+        double lattitude;
+        double longitude;
+
+        Location() {
+        }
+
+        Location(String name, double lattitude, double longitude) {
+            this.name = name;
+            this.lattitude = lattitude;
+            this.longitude = longitude;
+        }
+
+        private static Pattern p = Pattern.compile("^\\s*\"([^\"]*)\"\\s*,\\s*(\\-?\\d+(?:\\.\\d+)?)\\s*,\\s*(\\-?\\d+(?:\\.\\d+)?)\\s*?");
+        static Location parse(String s)
+        {
+            Location location = new Location();
+            Matcher m = p.matcher(s);
+            if (m.matches())
+            {
+                location.name = m.group(1);
+                location.lattitude = Double.parseDouble(m.group(2));
+                location.longitude = Double.parseDouble(m.group(3));
+            }
+            return location;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            Location l = (Location)obj;
+            if (l.name == null && this.name == null)
+                return true;
+            if (l.name == null || this.name == null)
+                return false;
+            return l.name.equals(this.name);
+        }
+
+        @Override
+        public int hashCode() {
+            if (name == null)
+                return "".hashCode();
+            return name.hashCode();
+        }
+
+        @Override
+        public String toString() {
+            return name;
+        }
     }
 }
