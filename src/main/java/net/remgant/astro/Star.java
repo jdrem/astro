@@ -50,8 +50,22 @@ public class Star extends FixedObject {
         return constellation + id1.trim();
     }
 
+//    @Override
+//    public String toString() {
+//        return getName();
+//    }
+
     @Override
     public String toString() {
-        return getName();
+        return "Star{" +
+                "magnitude=" + magnitude +
+                ", constellation='" + constellation + '\'' +
+                ", id1='" + id1 + '\'' +
+                ", id2='" + id2 + '\'' +
+                ", spectralClass=" + spectralClass +
+                ", RA=" + RA +
+                ", decl=" + decl +
+                ", name='" + name + '\'' +
+                '}';
     }
 }
