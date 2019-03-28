@@ -1,7 +1,6 @@
 package net.remgant.astro;
 
 public class Star extends FixedObject {
-    static final long serialVersionUID = -3952665899111645394L;
     protected double magnitude;
     protected String constellation;
     protected String id1;
