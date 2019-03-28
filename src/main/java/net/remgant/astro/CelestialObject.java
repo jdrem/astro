@@ -1,8 +1,6 @@
 package net.remgant.astro;
 
-public abstract class CelestialObject
-        implements java.io.Serializable {
-    static final long serialVersionUID = -4526987729909101128L;
+public abstract class CelestialObject {
     protected double RA;
     protected double decl;
     protected String name;
