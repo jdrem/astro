@@ -1014,32 +1014,15 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         return r;
     }
 
-    private Set<Star> loadStars1() {
-        Set<Star> set = new HashSet<>();
-        try {
-            ObjectInputStream in = new ObjectInputStream(getClass().getResource("bsc.obj").openStream());
-            while (true) {
-                Object o = in.readObject();
-                if (o == null)
-                    break;
-                set.add((Star) o);
-            }
-        } catch (EOFException ignored) {
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return set;
-    }
-
     private Set<Star> loadStars() {
         try (InputStream in = getClass().getResource("bsc.json").openStream()) {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             byte buffer[] = new byte[4096];
-            for (; ; ) {
-                int l = in.read(buffer);
-                if (l == -1)
+            while (in.available() > 0) {
+                int length = in.read(buffer);
+                if (length == -1)
                     break;
-                baos.write(buffer, 0, l);
+                baos.write(buffer, 0, length);
             }
             String s = new String(baos.toByteArray(), StandardCharsets.UTF_8);
             Gson gson = new Gson();
@@ -1049,22 +1032,6 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
             return new HashSet<>(list);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
-        }
-    }
-
-    private void loadObjects(Set<Star> set) {
-
-        try {
-            ObjectInputStream in = new ObjectInputStream(getClass().getResource("bsc.obj").openStream());
-            while (true) {
-                Object o = in.readObject();
-                if (o == null)
-                    break;
-                set.add((Star) o);
-            }
-        } catch (EOFException ignored) {
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 
