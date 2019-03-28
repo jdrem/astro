@@ -1,5 +1,7 @@
 package net.remgant.astro;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import net.remgant.gui.DecimalField;
 import net.remgant.gui.IntegerField;
 
@@ -15,12 +17,12 @@ import java.awt.image.BufferedImage;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.awt.print.PrinterJob;
-import java.io.BufferedReader;
-import java.io.EOFException;
-import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
+import java.io.*;
+import java.lang.reflect.Type;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.List;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 import java.util.regex.Matcher;
@@ -243,9 +245,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         panel.addComponentListener(this);
         panel.addMouseMotionListener(this);
 
-        stars = new HashSet<Star>();
-
-        loadObjects(stars);
+        stars = loadStars();
 
         showConBounds = preferences.getBoolean("display.showConBounds",true);
         showGrid = preferences.getBoolean("display.showGrid",true);
@@ -1014,19 +1014,24 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         return r;
     }
 
-    private void loadObjects(Set<Star> set) {
-
-        try {
-            ObjectInputStream in = new ObjectInputStream(getClass().getResource("bsc.obj").openStream());
-            while (true) {
-                Object o = in.readObject();
-                if (o == null)
+    private Set<Star> loadStars() {
+        try (InputStream in = getClass().getResource("bsc.json").openStream()) {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            byte buffer[] = new byte[4096];
+            while (in.available() > 0) {
+                int length = in.read(buffer);
+                if (length == -1)
                     break;
-                set.add((Star) o);
+                baos.write(buffer, 0, length);
             }
-        } catch (EOFException ignored) {
-        } catch (Exception e) {
-            e.printStackTrace();
+            String s = new String(baos.toByteArray(), StandardCharsets.UTF_8);
+            Gson gson = new Gson();
+            java.lang.reflect.Type listType = new TypeToken<List<Star>>() {
+            }.getType();
+            List<Star> list = gson.fromJson(s, listType);
+            return new HashSet<>(list);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 
