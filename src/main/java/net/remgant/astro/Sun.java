@@ -86,38 +86,26 @@ public class Sun extends MovingObject {
     double LHA;
     double UT_Sun_in_south;
 
-    void computeSetData(double lon, double lat, double d,
-                        double tzOff) {
-        // System.out.println("decls = "+decls);
-        // System.out.println("Ms = "+Ms);
-        // System.out.println("ws = "+ws);
+    void computeSetData(double lon, double lat) {
         L = M + w;
         if (L > 360.0)
             L %= 360.0;
-        // System.out.println("Ls = "+Ls);
-        // GMST0 = L + 180.0;
         GMST0 = Trig.rev(L + 180.0);
-        // System.out.println("GMST0 = "+GMST0);
-        // System.out.println("RA = "+RA);
         UT_Sun_in_south = (RA - GMST0 - lon) / 15.0;
         if (UT_Sun_in_south > 24.0)
             UT_Sun_in_south %= 24.0;
         else if (UT_Sun_in_south < 0.0)
             UT_Sun_in_south += 24.0;
-        // System.out.println("UT_Sun_in_south = "+UT_Sun_in_south);
         h = -0.833;
-        // System.out.println("h = "+h);
         preLHA = (Trig.sin(h) - Trig.sin(lat) * Trig.sin(decl)) / (Trig.cos(lat) * Trig.cos(decl));
-        // System.out.println("preLHA = "+preLHA);
         LHA = Trig.acos(preLHA) / 15.0;
-        // System.out.println("LHA = "+LHA);
     }
 
     public double computeTransitTime(double lon, double lat, double d,
                                      double tzOff) {
         d = d - d % 1.0 + 0.5 + tzOff / 24.0;
         computePos(d);
-        computeSetData(lon, lat, d, tzOff);
+        computeSetData(lon, lat);
         return UT_Sun_in_south;
     }
 
@@ -126,7 +114,7 @@ public class Sun extends MovingObject {
         // adjsut d to be noon local time
         d = d - d % 1.0 + 0.5 + tzOff / 24.0;
         computePos(d);
-        computeSetData(lon, lat, d, tzOff);
+        computeSetData(lon, lat);
         return UT_Sun_in_south - LHA;
     }
 
@@ -135,7 +123,7 @@ public class Sun extends MovingObject {
         // adjsut d to be noon local time
         d = d - d % 1.0 + 0.5 + tzOff / 24.0;
         computePos(d);
-        computeSetData(lon, lat, d, tzOff);
+        computeSetData(lon, lat);
         return UT_Sun_in_south + LHA;
     }
 

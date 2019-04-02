@@ -70,7 +70,7 @@ public class AstroTest {
 
         // double expectedAzm = 15.6767;
         double expectedAzm = 274.1767;
-        double actualAzm = sun.getAzimuth(d, 0.0, lon, lat);
+        double actualAzm = sun.getAzimuth(d, lon, lat);
         assertEquals(expectedAzm, actualAzm, 0.01);
     }
 
@@ -98,7 +98,7 @@ public class AstroTest {
         double lon = 15.0;
 
         double expectedAlt = -17.9570;
-        double actualAlt = sun.getAltitude(d, 0.0, lon, lat);
+        double actualAlt = sun.getAltitude(d, lon, lat);
         assertEquals(expectedAlt, actualAlt, 0.01);
     }
 
@@ -110,13 +110,11 @@ public class AstroTest {
         cal.set(2012, Calendar.MARCH, 26, 14, 35, 0);
         System.out.println("Time: "+cal.getTime());
         double d = net.remgant.astro.Time.getDayNumber(cal);
-        double ut = d - Math.floor(d);
-        d = Math.floor(d);
         double lat = 42.3;
         double lon = -71.1;
 
         double expectedAlt = 40.1;
-        double actualAlt = sun.getAltitude(d, ut, lon, lat);
+        double actualAlt = sun.getAltitude(d, lon, lat);
         assertEquals(expectedAlt, actualAlt, 0.25);
     }
 
@@ -126,13 +124,11 @@ public class AstroTest {
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         cal.set(2012, Calendar.MARCH, 26, 14, 35, 0);
         double d = net.remgant.astro.Time.getDayNumber(cal);
-        double ut = d - Math.floor(d);
-        d = Math.floor(d);
         double lat = 42.3;
         double lon = -71.1;
 
         double expectedAzm = 133.5;
-        double actualAzm = sun.getAzimuth(d, ut, lon, lat);
+        double actualAzm = sun.getAzimuth(d, lon, lat);
         assertEquals(expectedAzm, actualAzm, 0.15);
     }
 
@@ -191,7 +187,7 @@ public class AstroTest {
         double lon = -71.4750;
 
         double expectedAzm = 163.0152;
-        double actualAzm = sirius.getAzimuth(d, 0.0, lon, lat);
+        double actualAzm = sirius.getAzimuth(d, lon, lat);
         assertEquals(expectedAzm, actualAzm, 0.5);
     }
 
@@ -206,7 +202,7 @@ public class AstroTest {
         double lon = -71.4750;
 
         double expectedAlt = 29.4976;
-        double actualAlt = sirius.getAltitude(d, 0.0, lon, lat);
+        double actualAlt = sirius.getAltitude(d, lon, lat);
         assertEquals(expectedAlt, actualAlt, 1.5);
     }
 
