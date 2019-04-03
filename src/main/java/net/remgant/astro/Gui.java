@@ -4,6 +4,9 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import net.remgant.gui.DecimalField;
 import net.remgant.gui.IntegerField;
+import org.jdatepicker.DateModel;
+import org.jdatepicker.JDateComponentFactory;
+import org.jdatepicker.JDatePicker;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -456,8 +459,8 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
 
         GridBagConstraints c = new GridBagConstraints();
         c.fill = GridBagConstraints.BOTH;
-        JPanel panels[] = new JPanel[5];
-        for (int i = 0; i < 5; i++) {
+        JPanel panels[] = new JPanel[3];
+        for (int i = 0; i < panels.length; i++) {
             panels[i] = new JPanel();
             panels[i].setLayout(new BorderLayout());
             c.gridx = 0;
@@ -477,41 +480,20 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         panels[0].add(currentTimeButton, BorderLayout.WEST);
         panels[0].add(setTimeButton, BorderLayout.EAST);
 
-        JLabel yearLabel = new JLabel("Year");
-        panels[1].add(yearLabel,BorderLayout.WEST);
-        String year = Integer.toString(displayDate.get(Calendar.YEAR));
-        final JTextField yearField = new IntegerField(year,4);
-        yearField.setEditable(!currentTimeMode);
-        panels[1].add(yearField,BorderLayout.EAST);
-
-        JLabel monthLabel = new JLabel("Month");
-        panels[2].add(monthLabel,BorderLayout.WEST);
-        String month = Integer.toString(displayDate.get(Calendar.MONTH)+1);
-        final JTextField monthField = new IntegerField(month,4);
-        monthField.setEditable(!currentTimeMode);
-        panels[2].add(monthField,BorderLayout.EAST);
-
-        JLabel dayLabel = new JLabel("Day");
-        panels[3].add(dayLabel,BorderLayout.WEST);
-        String day = Integer.toString(displayDate.get(Calendar.DAY_OF_MONTH));
-        final JTextField dayField = new IntegerField(day,4);
-        dayField.setEditable(!currentTimeMode);
-        panels[3].add(dayField,BorderLayout.EAST);
+        final JDatePicker datePicker = new JDateComponentFactory().createJDatePicker();
+        datePicker.getModel().setDate(displayDate.get(Calendar.YEAR), displayDate.get(Calendar.MONTH), displayDate.get(Calendar.DAY_OF_MONTH));
+        datePicker.setTextEditable(!currentTimeMode);
+        datePicker.setShowYearButtons(true);
+        panels[1].add((JComponent)datePicker);
 
         currentTimeButton.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
                 System.out.println("currentTimeButton: "+currentTimeButton.isSelected());
-                yearField.setEditable(!currentTimeButton.isSelected());
-                monthField.setEditable(!currentTimeButton.isSelected());
-                dayField.setEditable(!currentTimeButton.isSelected());
                 if (currentTimeButton.isSelected())
                 {
                     Calendar now = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
                      now.setTime(new java.util.Date());
-                    yearField.setText(Integer.toString(now.get(Calendar.YEAR)));
-                    monthField.setText(Integer.toString(now.get(Calendar.MONTH)+1));
-                    dayField.setText(Integer.toString(now.get(Calendar.DAY_OF_MONTH)));
                 }
             }
         });
@@ -520,32 +502,17 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         JButton okButton = new JButton("OK");
         c.gridx = 0;
         c.gridy = 0;
-        panels[4].add(okButton, BorderLayout.WEST);
+        panels[2].add(okButton, BorderLayout.WEST);
         okButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 {
-                    int newYear = Integer.parseInt(yearField.getText());
-                    int newMonth = Integer.parseInt(monthField.getText()) - 1;
-                    int newDay = Integer.parseInt(dayField.getText());
-                    Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-                    cal.set(Calendar.YEAR,newYear);
-                    if (newMonth < cal.getMinimum(Calendar.MONTH) || newMonth > cal.getActualMaximum(Calendar.MONTH))
-                    {
-                        JOptionPane.showMessageDialog(d, "Invalid month: "+monthField.getText(),
-                            "Date Error",
-                            JOptionPane.ERROR_MESSAGE);
-                         return;
-                    }
-                    cal.set(Calendar.MONTH,newMonth);
-                    if (newDay < cal.getMinimum(Calendar.DAY_OF_MONTH) || newDay > cal.getActualMaximum(Calendar.DAY_OF_MONTH))
-                    {
-                        JOptionPane.showMessageDialog(d, "Invalid dat: "+dayField.getText(),
-                            "Date Error",
-                            JOptionPane.ERROR_MESSAGE);
-                         return;
-                    }
+                    DateModel<?> dateModel = datePicker.getModel();
+                    System.out.printf("%s %s%n",dateModel.getValue().getClass().toString(),dateModel.getValue().toString());
+                    int newYear = dateModel.getYear();
+                    int newMonth = dateModel.getMonth();
+                    int newDay = dateModel.getDay();
                     displayDate.set(Calendar.YEAR,newYear);
-                    displayDate.set(Calendar.MONDAY,newMonth);
+                    displayDate.set(Calendar.MONTH,newMonth);
                     displayDate.set(Calendar.DAY_OF_MONTH,newDay);
                     currentTimeMode = currentTimeButton.isSelected();
                     preferences.putBoolean("date.useCurrentTime", currentTimeMode);
@@ -560,7 +527,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         JButton cancelButton = new JButton("Cancel");
         c.gridx = 2;
         c.gridy = 0;
-        panels[4].add(cancelButton, BorderLayout.EAST);
+        panels[2].add(cancelButton, BorderLayout.EAST);
         cancelButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 d.dispose();
