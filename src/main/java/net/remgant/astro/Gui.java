@@ -1227,7 +1227,8 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
     }
 
     private void drawPlanets(Drawable drawable, Point point) {
-        double d = Math.floor(net.remgant.astro.Time.getDayNumber(displayDate));
+        double d = Math.floor(net.remgant.astro.Time.getDayNumber(displayDate))
+            + point.getX() / getBounds().getWidth();
         Rectangle2D bounds = drawable.getBounds2D();
 
         Graphics2D g = drawable.createGraphics();
