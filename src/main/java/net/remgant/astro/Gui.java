@@ -18,7 +18,6 @@ import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.awt.print.PrinterJob;
 import java.io.*;
-import java.lang.reflect.Type;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -813,8 +812,6 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         System.out.println("Cal: "+displayDate.getTime());
         System.out.println("Now: "+new Date());
         double d = net.remgant.astro.Time.getDayNumber(displayDate);
-        double ut = d - Math.floor(d);
-        d = Math.floor(d);
         System.out.println(d);
         double lon = -71.4750;
         double lat = 42.4750;
@@ -835,8 +832,8 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         }
 
         for (Star o : stars) {
-            double az = o.getAzimuth(d, 0.0, lon, lat);
-            double alt = o.getAltitude(d, 0.0, lon, lat);
+            double az = o.getAzimuth(d, lon, lat);
+            double alt = o.getAltitude(d, lon, lat);
             double magnitude = o.getMagnitude();
             if (magnitude > maxMagnitude)
                   continue;
@@ -854,8 +851,8 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
             g.fill(new Ellipse2D.Double(x,y,2.0,2.0));
         }
         Moon moon = new Moon();
-        double az = moon.getAzimuth(d, ut, lon, lat);
-        double alt = moon.getAltitude(d, ut, lon, lat);
+        double az = moon.getAzimuth(d, lon, lat);
+        double alt = moon.getAltitude(d, lon, lat);
         if (rectDisplayMode)
             p = getRectCoordinates2D(az, alt, bounds);
         else
@@ -870,8 +867,8 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         }
 
         Sun sun = new Sun();
-        az = sun.getAzimuth(d, ut, lon, lat);
-        alt = sun.getAltitude(d, ut, lon, lat);
+        az = sun.getAzimuth(d, lon, lat);
+        alt = sun.getAltitude(d, lon, lat);
         if (rectDisplayMode)
             p = getRectCoordinates2D(az, alt, bounds);
         else
@@ -912,8 +909,8 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
             double d = net.remgant.astro.Time.getDayNumber(cal[j]);
             for (int i = 0; i < 1024; i++) {
                 h += (1.0 / 1024.0) * (double) i;
-                double az = sun.getAzimuth(d, h, lon, lat);
-                double alt = sun.getAltitude(d, h, lon, lat);
+                double az = sun.getAzimuth(d, lon, lat);
+                double alt = sun.getAltitude(d, lon, lat);
                 if (rectDisplayMode)
                     p = getRectCoordinates(az, alt);
                 else
@@ -1230,11 +1227,9 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
     }
 
     private void drawPlanets(Drawable drawable, Point point) {
-//        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-//        cal.set(1991,Calendar.JUNE,23,0,0,0);
-        double d = Math.floor(net.remgant.astro.Time.getDayNumber(displayDate));
+        double d = Math.floor(net.remgant.astro.Time.getDayNumber(displayDate))
+            + point.getX() / getBounds().getWidth();
         Rectangle2D bounds = drawable.getBounds2D();
-        double ut = point.getX() / bounds.getWidth();
 
         Graphics2D g = drawable.createGraphics();
         FontRenderContext fontRenderContext = g.getFontRenderContext();
@@ -1252,8 +1247,8 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
 
         for (int i=0; i<mo.length; i++)
         {
-            double az = mo[i].getAzimuth(d, ut, longitude, latitude);
-            double alt = mo[i].getAltitude(d, ut, longitude, latitude);
+            double az = mo[i].getAzimuth(d, longitude, latitude);
+            double alt = mo[i].getAltitude(d, longitude, latitude);
             p = getRectCoordinates2D(az, alt, bounds);
             if (p == null)
                 continue;

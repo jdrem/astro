@@ -19,49 +19,33 @@ public abstract class CelestialObject {
     transient double yhor;
     transient double zhor;
 
-    void computeAzAltData(double d, double UT, double lon, double lat) {
+    protected void computeAzAltData(double d, double lon, double lat) {
+        double UT = d - Math.floor(d);
+        d = Math.floor(d);
         sun.computePos(d);
-        sun.computeSetData(lon, lat, d, UT);
+        sun.computeSetData(lon, lat);
 
-        // System.out.println(this.name);
         if (this instanceof MovingObject)
             ((MovingObject) this).computePos(d);
 
-        // System.out.println("d = "+d);
-        // System.out.println("lon = "+lon);
-        // System.out.println("lat = "+lat);
-
-        // System.out.println("RA = "+RA);
-        // System.out.println("decl = "+decl);
-
-        // System.out.println("UT = "+UT);
-        // System.out.println("M = "+sun.M);
-        // System.out.println("w = "+sun.w);
-        // System.out.println("L = "+sun.L);
-
-        // System.out.println("GMSTO = "+sun.GMST0);
         sidTime = sun.GMST0 + UT * 360.0 + lon;
-        // System.out.println("sidTime = "+sidTime);
         HA = sidTime - RA;
-        // System.out.println("HA = "+HA);
         double x = Trig.cos(HA) * Trig.cos(decl);
         double y = Trig.sin(HA) * Trig.cos(decl);
         double z = Trig.sin(decl);
-        // System.out.println("("+x+","+y+","+z+")");
 
         xhor = x * Trig.sin(lat) - z * Trig.cos(lat);
         yhor = y;
         zhor = x * Trig.cos(lat) + z * Trig.sin(lat);
-        // System.out.println("("+xhor+","+yhor+","+zhor+")");
     }
 
-    public double getAzimuth(double d, double UT, double lon, double lat) {
-        computeAzAltData(d, UT, lon, lat);
+    public double getAzimuth(double d, double lon, double lat) {
+        computeAzAltData(d, lon, lat);
         return Trig.rev(Trig.atan2(yhor, xhor) + 180.0);
     }
 
-    public double getAltitude(double d, double UT, double lon, double lat) {
-        computeAzAltData(d, UT, lon, lat);
+    public double getAltitude(double d, double lon, double lat) {
+        computeAzAltData(d, lon, lat);
         double alt = Trig.rev(Trig.asin(zhor));
         if (alt > 180.0)
             return alt - 360.0;

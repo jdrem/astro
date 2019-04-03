@@ -59,8 +59,8 @@ public class Moon extends Planet {
     }
 
     // need to override this to get a topocentric result
-    public double getAltitude(double d, double UT, double lon, double lat) {
-        computeAzAltData(d, UT, lon, lat);
+    public double getAltitude(double d, double lon, double lat) {
+        computeAzAltData(d, lon, lat);
         double alt = Trig.rev(Trig.asin(zhor));
         if (alt > 180.0)
             alt -= 360.0;

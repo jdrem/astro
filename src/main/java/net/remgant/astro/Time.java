@@ -3,6 +3,8 @@ package net.remgant.astro;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.SimpleTimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Time {
     static SimpleTimeZone utcZone;
@@ -39,5 +41,31 @@ public class Time {
 
     public static String getDayString(double d) {
         return "";
+    }
+
+    private final static Pattern htdPattern = Pattern.compile("(\\d+)[Hh]\\s*(\\d+)[Mm]\\s*(\\d+)[Ss]");
+
+    public static double hoursToDegrees(String in) {
+        Matcher matcher = htdPattern.matcher(in);
+        if (!matcher.matches())
+            throw new RuntimeException("can't parse: "+in);
+        double h = Double.parseDouble(matcher.group(1));
+        double m = Double.parseDouble(matcher.group(2));
+        double s = Double.parseDouble(matcher.group(3));
+
+        return ((h + (m / 60.0) + (s / 3600.0)) / 24.0) * 360.0;
+    }
+
+    private final static Pattern dmsPattern = Pattern.compile("(-?\\d+)[o\\u00B0]\\s*(?:(\\d+)'\\s*(?:(\\d+)\"))");
+
+    public static double degMinSecToDegDec(String in) {
+        Matcher matcher = dmsPattern.matcher(in);
+        if (!matcher.matches())
+            throw new RuntimeException(("can't parse: "+in));
+        double d = Double.parseDouble(matcher.group(1));
+        double m = matcher.group(2) != null ? Double.parseDouble(matcher.group(2)) : 0.0;
+        double s = matcher.group(3) != null ? Double.parseDouble(matcher.group(3)) : 0.0;
+        return d + m / 60.0 + s / 3600.0;
+        
     }
 }
