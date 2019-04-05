@@ -1,5 +1,9 @@
 package net.remgant.astro;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.SimpleTimeZone;
@@ -11,6 +15,25 @@ public class Time {
 
     static {
         utcZone = new SimpleTimeZone(0, "UTC");
+    }
+
+    public static double getDayNumber(TemporalAccessor temporalAccessor) {
+        int y = temporalAccessor.get(ChronoField.YEAR);
+        int m = temporalAccessor.get(ChronoField.MONTH_OF_YEAR);
+        int D = temporalAccessor.get(ChronoField.DAY_OF_MONTH);
+
+        int d = 367 * y - 7 * (y + (m + 9) / 12) / 4 + 275 * m / 9 + D - 730530;
+
+        if (temporalAccessor.isSupported(ChronoField.HOUR_OF_DAY)) {
+            int h = temporalAccessor.get(ChronoField.HOUR_OF_DAY);
+            int M = temporalAccessor.get(ChronoField.MINUTE_OF_HOUR);
+            int s = temporalAccessor.get(ChronoField.SECOND_OF_MINUTE);
+
+            double UT = (double) h + (double) (M * 60 + s) / 3600.0;
+            double dd = (double) d + UT / 24.0;
+            return dd;
+        }
+        return d;
     }
 
     public static double getDayNumber(java.util.Calendar cal) {
@@ -48,7 +71,7 @@ public class Time {
     public static double hoursToDegrees(String in) {
         Matcher matcher = htdPattern.matcher(in);
         if (!matcher.matches())
-            throw new RuntimeException("can't parse: "+in);
+            throw new RuntimeException("can't parse: " + in);
         double h = Double.parseDouble(matcher.group(1));
         double m = Double.parseDouble(matcher.group(2));
         double s = Double.parseDouble(matcher.group(3));
@@ -61,11 +84,11 @@ public class Time {
     public static double degMinSecToDegDec(String in) {
         Matcher matcher = dmsPattern.matcher(in);
         if (!matcher.matches())
-            throw new RuntimeException(("can't parse: "+in));
+            throw new RuntimeException(("can't parse: " + in));
         double d = Double.parseDouble(matcher.group(1));
         double m = matcher.group(2) != null ? Double.parseDouble(matcher.group(2)) : 0.0;
         double s = matcher.group(3) != null ? Double.parseDouble(matcher.group(3)) : 0.0;
         return d + m / 60.0 + s / 3600.0;
-        
+
     }
 }
