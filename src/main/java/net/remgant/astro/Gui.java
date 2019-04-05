@@ -20,7 +20,7 @@ import java.awt.print.PrinterJob;
 import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
+import java.time.*;
 import java.util.*;
 import java.util.List;
 import java.util.prefs.BackingStoreException;
@@ -63,7 +63,9 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
     double longitude;
     double latitude;
     String locationName;
-    Calendar displayDate;
+    String timeZoneName;
+    //Calendar displayDate;
+    Instant displayDate;
     Map<String,Location> locationMap;
     Location currentLocation;
 
@@ -77,31 +79,19 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         longitude = preferences.getDouble("location.longitude",-71.1);
         latitude = preferences.getDouble("location.latitude",42.3);
         locationName = preferences.get("location.name","Boston, MA, USA");
+        timeZoneName = preferences.get("location.timezone","America/New_York");
         currentTimeMode = preferences.getBoolean("date.useCurrentTime",true);
-        displayDate = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        displayDate.setTime(new java.util.Date());
-        int displayDateYear = preferences.getInt("date.year",displayDate.get(Calendar.YEAR));
-        int displayDateMonth = preferences.getInt("date.month",displayDate.get(Calendar.MONTH));
-        int displayDateDay = preferences.getInt("date.day_of_month",displayDate.get(Calendar.DAY_OF_MONTH));
-        displayDate.setTime(new java.util.Date(0L));
-        displayDate.set(Calendar.YEAR,displayDateYear);
-        displayDate.set(Calendar.MONTH,displayDateMonth);
-        displayDate.set(Calendar.DAY_OF_MONTH,displayDateDay);
+        LocalDate localDate = LocalDate.now();
+        int displayDateYear = preferences.getInt("date.year", localDate.getYear());
+        int displayDateMonth = preferences.getInt("date.month",localDate.getMonthValue());
+        int displayDateDay = preferences.getInt("date.day_of_month",localDate.getDayOfMonth());
+        displayDate = ZonedDateTime.of(LocalDate.of(displayDateYear,displayDateMonth,displayDateDay),
+                LocalTime.of(0,0,0), ZoneId.of(timeZoneName)).toInstant();
 
         locationMap = loadLocations();
         currentLocation = locationMap.get("Boston, MA, USA");
         if (currentLocation == null)
             currentLocation = new Location("Boston, MA, USA",-71.1,42.3);
-      /*  pack();
-        setResizable(false);
-        GraphicsConfiguration graphicsConfiguration = getGraphicsConfiguration();
-        Rectangle screenRect = graphicsConfiguration.getBounds();
-        Toolkit toolkit = Toolkit.getDefaultToolkit();
-        Insets desktopInsets = toolkit.getScreenInsets(graphicsConfiguration);
-        Insets frameInsets = getInsets();
-        screenSizeX = screenRect.width - (desktopInsets.left + desktopInsets.right) - (frameInsets.left + frameInsets.right);
-        screenSizeY = screenRect.height - (desktopInsets.top + desktopInsets.bottom) - (frameInsets.top + frameInsets.bottom);
-        setResizable(true);*/
 
         font = new Font(Font.SANS_SERIF,Font.PLAIN,12);
         char symbol = (new Jupiter()).getSymbol().charAt(0);
@@ -479,7 +469,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         panels[0].add(setTimeButton, BorderLayout.EAST);
 
         DatePicker datePicker = new DatePicker();
-        datePicker.setDate(LocalDate.of(displayDate.get(Calendar.YEAR),displayDate.get(Calendar.MONTH),displayDate.get(Calendar.DAY_OF_MONTH)));
+        datePicker.setDate(displayDate.atZone(ZoneId.of(timeZoneName)).toLocalDate());
         panels[1].add(datePicker);
 
         currentTimeButton.addChangeListener(new ChangeListener() {
@@ -505,12 +495,8 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
                     int newYear = datePicker.getDate().getYear();
                     int newMonth = datePicker.getDate().getMonthValue();
                     int newDay = datePicker.getDate().getDayOfMonth();
-                    Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-                    cal.set(Calendar.YEAR,newYear);
-                    cal.set(Calendar.MONTH,newMonth);
-                     displayDate.set(Calendar.YEAR,newYear);
-                    displayDate.set(Calendar.MONDAY,newMonth);
-                    displayDate.set(Calendar.DAY_OF_MONTH,newDay);
+                    displayDate = ZonedDateTime.of(LocalDate.of(newYear, newMonth, newDay),
+                            LocalTime.of(0,0,0),ZoneId.of(timeZoneName)).toInstant();
                     currentTimeMode = currentTimeButton.isSelected();
                     preferences.putBoolean("date.useCurrentTime", currentTimeMode);
                     preferences.putInt("date.year", newYear);
@@ -773,9 +759,9 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
 //        //cal.set(2002, Calendar.FEBRUARY, 16, 0, 0, 0);
 //        cal.set(2012,Calendar.MARCH,26,14,54,0);
 //        //cal.setTime(new Date());
-        System.out.println("Cal: "+displayDate.getTime());
+        System.out.println("Cal: "+displayDate.toString());
         System.out.println("Now: "+new Date());
-        double d = net.remgant.astro.Time.getDayNumber(displayDate);
+        double d = net.remgant.astro.Time.getDayNumber(displayDate.atZone(ZoneId.of(timeZoneName)).toLocalDate());
         System.out.println(d);
         double lon = -71.4750;
         double lat = 42.4750;
@@ -1191,7 +1177,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
     }
 
     private void drawPlanets(Drawable drawable, Point point) {
-        double d = Math.floor(net.remgant.astro.Time.getDayNumber(displayDate))
+        double d = Math.floor(net.remgant.astro.Time.getDayNumber(displayDate.atZone(ZoneId.of(timeZoneName)).toLocalDate()))
             + point.getX() / getBounds().getWidth();
         Rectangle2D bounds = drawable.getBounds2D();
 
@@ -1286,6 +1272,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         String name;
         double lattitude;
         double longitude;
+        String timeZone;
 
         Location() {
         }
@@ -1296,7 +1283,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
             this.longitude = longitude;
         }
 
-        private static Pattern p = Pattern.compile("^\\s*\"([^\"]*)\"\\s*,\\s*(\\-?\\d+(?:\\.\\d+)?)\\s*,\\s*(\\-?\\d+(?:\\.\\d+)?)\\s*?");
+        private static Pattern p = Pattern.compile("^\\s*\"([^\"]*)\"\\s*,\\s*(\\-?\\d+(?:\\.\\d+)?)\\s*,\\s*(\\-?\\d+(?:\\.\\d+)?),\\s*([\\w/]+)\\s*?");
         static Location parse(String s)
         {
             Location location = new Location();
@@ -1306,6 +1293,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
                 location.name = m.group(1);
                 location.lattitude = Double.parseDouble(m.group(2));
                 location.longitude = Double.parseDouble(m.group(3));
+                location.timeZone = m.group(4);
             }
             return location;
         }
