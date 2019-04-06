@@ -586,17 +586,13 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         MovingObject planets[] = new MovingObject[]{new Moon(),new Sun(),new Venus(),new Mars(),new Jupiter(),new Saturn(),new Mercury()};
         Color colors[] = new Color[]{Color.WHITE,Color.YELLOW,Color.WHITE,Color.RED,Color.MAGENTA,Color.ORANGE,Color.GRAY};
         g.setColor(drawable.isBW()?Color.BLACK:Color.YELLOW);
-        Sun sun = new Sun();
-        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        cal.set(2012, Calendar.MARCH, 21, 0, 0);
+        ZonedDateTime zonedDateTime = ZonedDateTime.of(displayDate.atZone(ZoneOffset.UTC).getYear(),3,21, 0, 0,0, 0,ZoneOffset.UTC);
         for (int j=0; j<planets.length; j++)
         {
             if (j != 2 && j != 3 && j != 6)
                 continue;
-            double d = net.remgant.astro.Time.getDayNumber(cal);
+            double d = net.remgant.astro.Time.getDayNumber(zonedDateTime);
             g.setColor(drawable.isBW()?Color.BLACK:colors[j]);
-//            for (int i = 0; i < 3650; i++) {
-//                d = d + (double) i / 10.0;
              for (int i = 0; i < 365; i++) {
                 d = d + 1.0;
                 double ra = planets[j].getRA(d);
@@ -688,9 +684,9 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         double height = drawable.getHeight2D();
         g.setColor(drawable.isBW()?Color.BLACK:Color.YELLOW);
         Sun sun = new Sun();
-        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        cal.set(2000, Calendar.MARCH, 21, 0, 0);
-        double d = net.remgant.astro.Time.getDayNumber(cal);
+        ZonedDateTime zonedDateTime = ZonedDateTime.of(displayDate.atZone(ZoneOffset.UTC).getYear(),
+                3,21, 0, 0,0, 0,ZoneOffset.UTC);
+        double d = net.remgant.astro.Time.getDayNumber(zonedDateTime);
         for (int i = 0; i < 3650; i++) {
             d = d + (double) i / 10.0;
             double ra = sun.getRA(d);
@@ -778,13 +774,13 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
     }
 
     private void drawSunPathScreen() {
-        Calendar cal[] = new Calendar[3];
-        cal[0] = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        cal[0].set(2002, Calendar.DECEMBER, 21, 19, 0, 0);
-        cal[1] = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        cal[1].set(2003, Calendar.MARCH, 21, 19, 0, 0);
-        cal[2] = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        cal[2].set(2003, Calendar.JUNE, 21, 19, 0, 0);
+        ZonedDateTime zdt[] = new ZonedDateTime[3];
+        zdt[0] =  ZonedDateTime.of(displayDate.atZone(ZoneOffset.UTC).getYear(),Month.DECEMBER.getValue(),21,
+                0, 0,0, 0,ZoneOffset.UTC);
+        zdt[0] =  ZonedDateTime.of(displayDate.atZone(ZoneOffset.UTC).getYear(),Month.MARCH.getValue(),21,
+                0, 0,0, 0,ZoneOffset.UTC);
+        zdt[0] =  ZonedDateTime.of(displayDate.atZone(ZoneOffset.UTC).getYear(), Month.JUNE.getValue(),21,
+                0, 0,0, 0,ZoneOffset.UTC);
         double lon = -71.4750;
         double lat = 42.4750;
         Point p;
@@ -799,7 +795,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
 
         Sun sun = new Sun();
         for (int j = 0; j < 3; j++) {
-            double d = net.remgant.astro.Time.getDayNumber(cal[j]);
+            double d = net.remgant.astro.Time.getDayNumber(zdt[j]);
             for (int i = 0; i < 1024; i++) {
                 double az = sun.getAzimuth(d, lon, lat);
                 double alt = sun.getAltitude(d, lon, lat);

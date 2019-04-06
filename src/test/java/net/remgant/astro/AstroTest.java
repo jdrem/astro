@@ -4,6 +4,9 @@ package net.remgant.astro;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.time.Month;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.TimeZone;
 
@@ -19,25 +22,24 @@ public class AstroTest {
     }
     @Test
     public void testTime() {
-        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        cal.set(1990, Calendar.APRIL, 19, 0, 0, 0);
-
+        ZonedDateTime zdt = ZonedDateTime.of(1990, Month.APRIL.getValue(), 19,
+                0, 0, 0, 0, ZoneOffset.UTC);
         double expected = -3543.0;
-        double actual = net.remgant.astro.Time.getDayNumber(cal);
+        double actual = net.remgant.astro.Time.getDayNumber(zdt);
         assertEquals(expected, actual, 0.001);
 
-        cal.set(2000, Calendar.JANUARY, 1, 0, 0, 0);
+        zdt = ZonedDateTime.of(2000, Month.JANUARY.getValue(), 1, 0, 0, 0, 0, ZoneOffset.UTC);
         expected = 1.0;
-        actual = net.remgant.astro.Time.getDayNumber(cal);
+        actual = net.remgant.astro.Time.getDayNumber(zdt);
         assertEquals(expected, actual, 0.001);
     }
 
     @Test
     public void testSunRA() {
         Sun sun = new Sun();
-        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        cal.set(1990, Calendar.APRIL, 19, 0, 0, 0);
-        double d = net.remgant.astro.Time.getDayNumber(cal);
+        ZonedDateTime zdt = ZonedDateTime.of(1990, Month.APRIL.getValue(), 19,
+                     0, 0, 0, 0, ZoneOffset.UTC);
+        double d = net.remgant.astro.Time.getDayNumber(zdt);
 
         double expectedRA = 26.6497;
         double actualRA = sun.getRA(d);
@@ -47,9 +49,9 @@ public class AstroTest {
     @Test
     public void testSunDecl() {
         Sun sun = new Sun();
-        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        cal.set(1990, Calendar.APRIL, 19, 0, 0, 0);
-        double d = net.remgant.astro.Time.getDayNumber(cal);
+        ZonedDateTime zdt = ZonedDateTime.of(1990, Month.APRIL.getValue(), 19,
+                     0, 0, 0, 0, ZoneOffset.UTC);
+        double d = net.remgant.astro.Time.getDayNumber(zdt);
 
         double expectedDecl = 11.0061;
         double actualDecl = sun.getDecl(d);
@@ -59,10 +61,9 @@ public class AstroTest {
     @Test
     public void testSunAzm() {
         Sun sun = new Sun();
-        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        // cal.set(1990,Calendar.APRIL,19,0,0,0);
-        cal.set(2003, Calendar.FEBRUARY, 28, 0, 0, 0);
-        double d = net.remgant.astro.Time.getDayNumber(cal);
+        ZonedDateTime zdt = ZonedDateTime.of(2003, Month.FEBRUARY.getValue(), 28,
+                     0, 0, 0, 0, ZoneOffset.UTC);
+        double d = net.remgant.astro.Time.getDayNumber(zdt);
         // double lat = 60.0;
         // double lon = 15.0;
         double lat = 42.0867;
@@ -77,9 +78,9 @@ public class AstroTest {
     @Test
     public void testSunrise() {
         Sun sun = new Sun();
-        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        cal.set(2010, Calendar.DECEMBER, 21, 12, 0, 0);
-        double d = net.remgant.astro.Time.getDayNumber(cal);
+        ZonedDateTime zdt = ZonedDateTime.of(2010, Month.DECEMBER.getValue(), 19,
+                     0, 0, 0, 0, ZoneOffset.UTC);
+        double d = net.remgant.astro.Time.getDayNumber(zdt);
         double lat = 42.3;
         double lon = -71.1;
         double expected = 12.1667;
@@ -91,9 +92,9 @@ public class AstroTest {
     @Test
     public void testSunAlt() {
         Sun sun = new Sun();
-        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        cal.set(1990, Calendar.APRIL, 19, 0, 0, 0);
-        double d = net.remgant.astro.Time.getDayNumber(cal);
+        ZonedDateTime zdt = ZonedDateTime.of(1990, Month.APRIL.getValue(), 19,
+                     0, 0, 0, 0, ZoneOffset.UTC);
+        double d = net.remgant.astro.Time.getDayNumber(zdt);
         double lat = 60.0;
         double lon = 15.0;
 
@@ -105,11 +106,9 @@ public class AstroTest {
     @Test
     public void testSunAltNotMidnight() {
         Sun sun = new Sun();
-        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-//        Calendar cal = Calendar.getInstance();
-        cal.set(2012, Calendar.MARCH, 26, 14, 35, 0);
-        System.out.println("Time: "+cal.getTime());
-        double d = net.remgant.astro.Time.getDayNumber(cal);
+        ZonedDateTime zdt = ZonedDateTime.of(2012, Month.MARCH.getValue(), 26,
+                     14, 35, 0, 0, ZoneOffset.UTC);
+        double d = net.remgant.astro.Time.getDayNumber(zdt);
         double lat = 42.3;
         double lon = -71.1;
 
@@ -121,9 +120,9 @@ public class AstroTest {
     @Test
     public void testSunAzmNotMidnight() {
         Sun sun = new Sun();
-        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        cal.set(2012, Calendar.MARCH, 26, 14, 35, 0);
-        double d = net.remgant.astro.Time.getDayNumber(cal);
+        ZonedDateTime zdt = ZonedDateTime.of(2012, Month.MARCH.getValue(), 26,
+                     14, 35, 0, 0, ZoneOffset.UTC);
+        double d = net.remgant.astro.Time.getDayNumber(zdt);
         double lat = 42.3;
         double lon = -71.1;
 
@@ -136,9 +135,9 @@ public class AstroTest {
     public void testSiriusRA() {
         Star sirius = new Star("101.2871", "-15.2839", "CMa", "9", "Alp", "Sirius",
                 "-1.46", "A");
-        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        cal.set(1990, Calendar.APRIL, 19, 0, 0, 0);
-        double d = net.remgant.astro.Time.getDayNumber(cal);
+        ZonedDateTime zdt = ZonedDateTime.of(1990, Month.APRIL.getValue(), 19,
+                             0, 0, 0, 0, ZoneOffset.UTC);
+        double d = net.remgant.astro.Time.getDayNumber(zdt);
 
         double expectedRA = 101.2871;
         double actualRA = sirius.getRA(d);
@@ -149,9 +148,9 @@ public class AstroTest {
     public void testSiriusDecl() {
         Star sirius = new Star("101.2871", "-15.2839", "CMa", "9", "Alp", "Sirius",
                 "-1.46", "A");
-        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        cal.set(1990, Calendar.APRIL, 19, 0, 0, 0);
-        double d = net.remgant.astro.Time.getDayNumber(cal);
+        ZonedDateTime zdt = ZonedDateTime.of(1990, Month.APRIL.getValue(), 19,
+                                  0, 0, 0, 0, ZoneOffset.UTC);
+        double d = net.remgant.astro.Time.getDayNumber(zdt);
 
         double expectedDecl = -15.2839;
         double actualDecl = sirius.getDecl(d);
@@ -180,9 +179,9 @@ public class AstroTest {
     public void testSiriusAzm() {
         Star sirius = new Star("101.2871", "-15.2839", "CMa", "9", "Alp", "Sirius",
                 "-1.46", "A");
-        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        cal.set(2003, Calendar.FEBRUARY, 28, 0, 0, 0);
-        double d = net.remgant.astro.Time.getDayNumber(cal);
+        ZonedDateTime zdt = ZonedDateTime.of(2003, Month.FEBRUARY.getValue(), 28,
+                                  0, 0, 0, 0, ZoneOffset.UTC);
+        double d = net.remgant.astro.Time.getDayNumber(zdt);
         double lat = 42.0867;
         double lon = -71.4750;
 
@@ -195,9 +194,9 @@ public class AstroTest {
     public void testSiriusAlt() {
         Star sirius = new Star("101.2871", "-15.2839", "CMa", "9", "Alp", "Sirius",
                 "-1.46", "A");
-        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        cal.set(2003, Calendar.FEBRUARY, 28, 0, 0, 0);
-        double d = net.remgant.astro.Time.getDayNumber(cal);
+        ZonedDateTime zdt = ZonedDateTime.of(2003, Month.FEBRUARY.getValue(), 28,
+                                  0, 0, 0, 0, ZoneOffset.UTC);
+        double d = net.remgant.astro.Time.getDayNumber(zdt);
         double lat = 42.0867;
         double lon = -71.4750;
 
@@ -333,9 +332,9 @@ public class AstroTest {
                 -23.3785, -23.3439, -23.3014, -23.2512, -23.1933, -23.1275};
 
         Sun sun = new Sun();
-        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        cal.set(2002, Calendar.JANUARY, 1, 0, 0, 0);
-        double d = net.remgant.astro.Time.getDayNumber(cal);
+        ZonedDateTime zdt = ZonedDateTime.of(2002, Month.JANUARY.getValue(), 1,
+                                  0, 0, 0, 0, ZoneOffset.UTC);
+        double d = net.remgant.astro.Time.getDayNumber(zdt);
 
         double actualRA;
         double actualDecl;
