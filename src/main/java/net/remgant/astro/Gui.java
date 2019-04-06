@@ -6,8 +6,6 @@ import com.google.gson.reflect.TypeToken;
 import net.remgant.gui.DecimalField;
 
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.font.FontRenderContext;
@@ -162,29 +160,15 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         myMenuBar.add(EditMenu);
 
         JMenuItem propertiesItem = new JMenuItem("Properties");
-        propertiesItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                editProperties();
-            }
-        });
+        propertiesItem.addActionListener(e -> editProperties());
         EditMenu.add(propertiesItem);
 
         JMenuItem dateMenuItem = new JMenuItem("Date");
-        dateMenuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                editDate();
-            }
-        });
+        dateMenuItem.addActionListener(e -> editDate());
         EditMenu.add(dateMenuItem);
 
         JMenuItem locationMenuItem = new JMenuItem("Location");
-        locationMenuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                editLocation();
-            }
-        });
+        locationMenuItem.addActionListener(e -> editLocation());
         EditMenu.add(locationMenuItem);
 
         JMenu ModeMenu = new JMenu("Mode");
@@ -220,11 +204,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         myMenuBar.add(HelpMenu);
 
         JMenuItem AboutMenuItem = new JMenuItem("About");
-        AboutMenuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                JOptionPane.showMessageDialog(Gui.this, "Remgant Sky Mapper");
-            }
-        });
+        AboutMenuItem.addActionListener(e -> JOptionPane.showMessageDialog(Gui.this, "Remgant Sky Mapper"));
         HelpMenu.add(AboutMenuItem);
 
 
@@ -317,20 +297,18 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         c.gridx = 0;
         c.gridy = 0;
         panels[p].add(okButton, BorderLayout.WEST);
-        okButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                {
-                    showConBounds = showConBoundsCheckBox.isSelected();
-                    showGrid = showGridCheckBox.isSelected();
-                    showEcliptic = showEclipticCheckBox.isSelected();
-                    maxMagnitude = Double.parseDouble(maxMagnitudeField.getText());
-                    drawScreen(panel,displayMode);
-                    d.dispose();
-                    preferences.putBoolean("display.showConBounds",showConBounds);
-                    preferences.putBoolean("display.showGrid",showGrid);
-                    preferences.putBoolean("display.showEcliptic",showEcliptic);
-                    preferences.putDouble("display.maxMagnitude",maxMagnitude);
-                }
+        okButton.addActionListener(e -> {
+            {
+                showConBounds = showConBoundsCheckBox.isSelected();
+                showGrid = showGridCheckBox.isSelected();
+                showEcliptic = showEclipticCheckBox.isSelected();
+                maxMagnitude = Double.parseDouble(maxMagnitudeField.getText());
+                drawScreen(panel,displayMode);
+                d.dispose();
+                preferences.putBoolean("display.showConBounds",showConBounds);
+                preferences.putBoolean("display.showGrid",showGrid);
+                preferences.putBoolean("display.showEcliptic",showEcliptic);
+                preferences.putDouble("display.maxMagnitude",maxMagnitude);
             }
         });
 
@@ -338,11 +316,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         c.gridx = 2;
         c.gridy = 0;
         panels[p].add(cancelButton, BorderLayout.EAST);
-        cancelButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                d.dispose();
-            }
-        });
+        cancelButton.addActionListener(e -> d.dispose());
 
         d.addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
@@ -407,16 +381,14 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         c.gridx = 0;
         c.gridy = 0;
         panels[4].add(okButton, BorderLayout.WEST);
-        okButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                {
-                    showConBounds = showConBoundsCheckBox.isSelected();
-                    showGrid = showGridCheckBox.isSelected();
-                    rectDisplayMode = rectDisplayButton.isSelected();
-                    currentTimeMode = currentTimeButton.isSelected();
-                    drawScreen(panel,displayMode);
-                    d.dispose();
-                }
+        okButton.addActionListener(e -> {
+            {
+                showConBounds = showConBoundsCheckBox.isSelected();
+                showGrid = showGridCheckBox.isSelected();
+                rectDisplayMode = rectDisplayButton.isSelected();
+                currentTimeMode = currentTimeButton.isSelected();
+                drawScreen(panel,displayMode);
+                d.dispose();
             }
         });
 
@@ -424,11 +396,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         c.gridx = 2;
         c.gridy = 0;
         panels[4].add(cancelButton, BorderLayout.EAST);
-        cancelButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                d.dispose();
-            }
-        });
+        cancelButton.addActionListener(e -> d.dispose());
 
         d.addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
@@ -472,15 +440,12 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         datePicker.setDate(displayDate.atZone(ZoneId.of(timeZoneName)).toLocalDate());
         panels[1].add(datePicker);
 
-        currentTimeButton.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                System.out.println("currentTimeButton: "+currentTimeButton.isSelected());
-                if (currentTimeButton.isSelected())
-                {
-                    Calendar now = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-                     now.setTime(new java.util.Date());
-                }
+        currentTimeButton.addChangeListener(e -> {
+            System.out.println("currentTimeButton: "+currentTimeButton.isSelected());
+            if (currentTimeButton.isSelected())
+            {
+                Calendar now = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+                 now.setTime(new java.util.Date());
             }
         });
 
@@ -489,21 +454,19 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         c.gridx = 0;
         c.gridy = 0;
         panels[2].add(okButton, BorderLayout.WEST);
-        okButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                {
-                    int newYear = datePicker.getDate().getYear();
-                    int newMonth = datePicker.getDate().getMonthValue();
-                    int newDay = datePicker.getDate().getDayOfMonth();
-                    displayDate = ZonedDateTime.of(LocalDate.of(newYear, newMonth, newDay),
-                            LocalTime.of(0,0,0),ZoneId.of(timeZoneName)).toInstant();
-                    currentTimeMode = currentTimeButton.isSelected();
-                    preferences.putBoolean("date.useCurrentTime", currentTimeMode);
-                    preferences.putInt("date.year", newYear);
-                    preferences.putInt("date.month", newMonth);
-                    preferences.putInt("date.day_of_month", newDay);
-                    d.dispose();
-                }
+        okButton.addActionListener(e -> {
+            {
+                int newYear = datePicker.getDate().getYear();
+                int newMonth = datePicker.getDate().getMonthValue();
+                int newDay = datePicker.getDate().getDayOfMonth();
+                displayDate = ZonedDateTime.of(LocalDate.of(newYear, newMonth, newDay),
+                        LocalTime.of(0,0,0),ZoneId.of(timeZoneName)).toInstant();
+                currentTimeMode = currentTimeButton.isSelected();
+                preferences.putBoolean("date.useCurrentTime", currentTimeMode);
+                preferences.putInt("date.year", newYear);
+                preferences.putInt("date.month", newMonth);
+                preferences.putInt("date.day_of_month", newDay);
+                d.dispose();
             }
         });
 
@@ -511,13 +474,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         c.gridx = 2;
         c.gridy = 0;
         panels[2].add(cancelButton, BorderLayout.EAST);
-        cancelButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                d.dispose();
-            }
-        });
-
-
+        cancelButton.addActionListener(e -> d.dispose());
         d.addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
                 e.getWindow().dispose();
@@ -557,22 +514,13 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         c.gridx = 0;
         c.gridy = 0;
         panels[4].add(okButton, BorderLayout.WEST);
-        okButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-
-                    d.dispose();
-            }
-        });
+        okButton.addActionListener(e -> d.dispose());
 
         JButton cancelButton = new JButton("Cancel");
         c.gridx = 2;
         c.gridy = 0;
         panels[4].add(cancelButton, BorderLayout.EAST);
-        cancelButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                d.dispose();
-            }
-        });
+        cancelButton.addActionListener(e -> d.dispose());
 
 
         d.addWindowListener(new WindowAdapter() {
@@ -755,10 +703,6 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
 
     private void drawLocalScreen(Drawable drawable)
     {
-//        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-//        //cal.set(2002, Calendar.FEBRUARY, 16, 0, 0, 0);
-//        cal.set(2012,Calendar.MARCH,26,14,54,0);
-//        //cal.setTime(new Date());
         System.out.println("Cal: "+displayDate.toString());
         System.out.println("Now: "+new Date());
         double d = net.remgant.astro.Time.getDayNumber(displayDate.atZone(ZoneId.of(timeZoneName)).toLocalDate());
@@ -854,11 +798,9 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         }
 
         Sun sun = new Sun();
-        double h = 0.0;
         for (int j = 0; j < 3; j++) {
             double d = net.remgant.astro.Time.getDayNumber(cal[j]);
             for (int i = 0; i < 1024; i++) {
-                h += (1.0 / 1024.0) * (double) i;
                 double az = sun.getAzimuth(d, lon, lat);
                 double alt = sun.getAltitude(d, lon, lat);
                 if (rectDisplayMode)
@@ -1249,7 +1191,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
 
     private Map<String,Location> loadLocations()
     {
-        Map<String,Location> map = new TreeMap<String,Location>();
+        Map<String,Location> map = new TreeMap<>();
         try {
             BufferedReader in = new BufferedReader(new InputStreamReader(getClass().getResource("locations.dat").openStream()));
             String line = in.readLine();
