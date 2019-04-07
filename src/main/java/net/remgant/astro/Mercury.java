@@ -1,5 +1,6 @@
 package net.remgant.astro;
 
+@SuppressWarnings("WeakerAccess")
 public class Mercury extends Planet {
     public Mercury() {
         N0 = 48.3313;

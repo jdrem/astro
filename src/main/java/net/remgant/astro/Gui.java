@@ -43,31 +43,31 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         Gui frame = new Gui();
     }
 
-    int screenSizeX;
-    int screenSizeY;
-    Panel panel;
-    Set<Star> stars;
-    boolean showConBounds;
-    boolean showGrid;
-    boolean showEcliptic;
-    boolean rectDisplayMode;
-    boolean currentTimeMode;
-    double maxMagnitude;
+    private int screenSizeX;
+    private int screenSizeY;
+    private Panel panel;
+    private Set<Star> stars;
+    private boolean showConBounds;
+    private boolean showGrid;
+    private boolean showEcliptic;
+    private boolean rectDisplayMode;
+    private boolean currentTimeMode;
+    private double maxMagnitude;
     enum DisplayMode{FULL_SKY,LOCAL_SKY,SUN_PATH,RISE_SET,PLANET_PATH}
-    DisplayMode displayMode;
-    Font font;
+    private DisplayMode displayMode;
+    private Font font;
 
-    Preferences preferences;
-    double longitude;
-    double latitude;
-    String locationName;
-    String timeZoneName;
-    //Calendar displayDate;
-    Instant displayDate;
-    Map<String,Location> locationMap;
-    Location currentLocation;
+    private Preferences preferences;
+    private double longitude;
+    private double latitude;
+    @SuppressWarnings({"FieldCanBeLocal", "unused"})
+    private String locationName;
+    private String timeZoneName;
+    private Instant displayDate;
+    private Map<String,Location> locationMap;
+    private Location currentLocation;
 
-    Gui() {
+    private Gui() {
         super("Remgant Sky Watcher");
 
         preferences = Preferences.userNodeForPackage(Gui.class);
@@ -126,33 +126,29 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         myMenuBar.add(FileMenu);
 
         JMenuItem PrintMenuItem = new JMenuItem("Print");
-        PrintMenuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                PrinterJob pj = PrinterJob.getPrinterJob();
-                pj.setPrintable(Gui.this);
-                if (!pj.printDialog())
-                    return;
-                try {
-                    pj.print();
-                } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(Gui.this, ex.getMessage(),
-                            "Print Error",
-                            JOptionPane.ERROR_MESSAGE);
-                }
+        PrintMenuItem.addActionListener(e -> {
+            PrinterJob pj = PrinterJob.getPrinterJob();
+            pj.setPrintable(Gui.this);
+            if (!pj.printDialog())
+                return;
+            try {
+                pj.print();
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(Gui.this, ex.getMessage(),
+                        "Print Error",
+                        JOptionPane.ERROR_MESSAGE);
             }
         });
         FileMenu.add(PrintMenuItem);
 
         JMenuItem ExitMenuItem = new JMenuItem("Exit");
-        ExitMenuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    preferences.sync();
-                } catch (BackingStoreException e1) {
-                    e1.printStackTrace();
-                }
-                System.exit(1);
+        ExitMenuItem.addActionListener(e -> {
+            try {
+                preferences.sync();
+            } catch (BackingStoreException e1) {
+                e1.printStackTrace();
             }
+            System.exit(1);
         });
         FileMenu.add(ExitMenuItem);
 
@@ -335,6 +331,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         GridBagConstraints c = new GridBagConstraints();
         c.fill = GridBagConstraints.BOTH;
         JPanel panels[] = new JPanel[5];
+        //noinspection Duplicates
         for (int i = 0; i < 5; i++) {
             panels[i] = new JPanel();
             panels[i].setLayout(new BorderLayout());
@@ -493,7 +490,8 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         GridBagConstraints c = new GridBagConstraints();
         c.fill = GridBagConstraints.BOTH;
         JPanel panels[] = new JPanel[5];
-        for (int i = 0; i < 5; i++) {
+        //noinspection Duplicates
+        for ( int i = 0; i < 5; i++) {
             panels[i] = new JPanel();
             panels[i].setLayout(new BorderLayout());
             c.gridx = 0;
@@ -503,8 +501,10 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         c.gridwidth = 1;
         c.gridheight = 1;
 
+        @SuppressWarnings("unchecked")
         DefaultComboBoxModel model = new DefaultComboBoxModel(locationMap.values().toArray());
         model.setSelectedItem(currentLocation);
+        @SuppressWarnings("unchecked")
         JComboBox locationList = new JComboBox(model);
         locationList.setEditable(true);
         panels[0].add(locationList,BorderLayout.CENTER);
@@ -700,7 +700,6 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
     private void drawLocalScreen(Drawable drawable)
     {
         System.out.println("Cal: "+displayDate.toString());
-        System.out.println("Now: "+new Date());
         double d = net.remgant.astro.Time.getDayNumber(displayDate.atZone(ZoneId.of(timeZoneName)).toLocalDate());
         System.out.println(d);
         double lon = -71.4750;
@@ -924,25 +923,27 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         private Dimension dim;
         private BufferedImage image;
 
-        public Panel(Dimension d) {
+        Panel(Dimension d) {
             super();
             dim = d;
             image = new BufferedImage(d.width, d.height, BufferedImage.TYPE_INT_RGB);
         }
 
-        public void resizeImage(Dimension d) {
+        void resizeImage(Dimension d) {
             dim = d;
             image = new BufferedImage(d.width, d.height, BufferedImage.TYPE_INT_RGB);
         }
 
-        public void clear(Color c) {
+        @SuppressWarnings("SameParameterValue")
+        void clear(Color c) {
             Graphics g = image.getGraphics();
             g.clearRect(0, 0, dim.width, dim.height);
             g.setColor(c);
             g.fillRect(0, 0, dim.width, dim.height);
         }
 
-        public void drawPoint(int x, int y, Color c) {
+        @SuppressWarnings("SameParameterValue")
+        void drawPoint(int x, int y, Color c) {
 
              Graphics2D g = image.createGraphics();
             g.setColor(c);
@@ -950,7 +951,8 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
 
         }
 
-        public void drawFilledCircle(int x, int y, int r, Color c) {
+        @SuppressWarnings("SameParameterValue")
+        void drawFilledCircle(int x, int y, int r, Color c) {
             Graphics2D g = image.createGraphics();
             g.setColor(c);
             g.fill(new Ellipse2D.Double((double)x/2.0,(double)y/2.0,(double)r,(double)r));
@@ -1004,7 +1006,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         int xOff;
         int yOff;
 
-        public PrintPage(Graphics g, int width, int height, int xOff, int yOff) {
+        PrintPage(Graphics g, int width, int height, int xOff, int yOff) {
             this.g = g;
             this.width = width;
             this.height = height;
@@ -1017,7 +1019,8 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
             clear(Color.white);
         }
 
-        public void clear(Color c) {
+        @SuppressWarnings("SameParameterValue")
+        void clear(Color c) {
             if (c.equals(Color.black))
                 c = Color.white;
             g.clearRect(xOff, yOff, width, height);
@@ -1085,16 +1088,22 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
 
     // this is required when implementing ActionListener
     public void actionPerformed(ActionEvent e) {
-        if (e.getActionCommand().equals("Full Sky")) {
-            displayMode = DisplayMode.FULL_SKY;
-        } else if (e.getActionCommand().equals("Local Sky")) {
-            displayMode = DisplayMode.LOCAL_SKY;
-        } else if (e.getActionCommand().equals("Sun Path")) {
-            displayMode = DisplayMode.SUN_PATH;
-        } else if (e.getActionCommand().equals("Rise/Set")) {
-            displayMode =DisplayMode.RISE_SET;
-        } else if (e.getActionCommand().equals("Planet Path")) {
-            displayMode =DisplayMode.PLANET_PATH;
+        switch (e.getActionCommand()) {
+            case "Full Sky":
+                displayMode = DisplayMode.FULL_SKY;
+                break;
+            case "Local Sky":
+                displayMode = DisplayMode.LOCAL_SKY;
+                break;
+            case "Sun Path":
+                displayMode = DisplayMode.SUN_PATH;
+                break;
+            case "Rise/Set":
+                displayMode = DisplayMode.RISE_SET;
+                break;
+            case "Planet Path":
+                displayMode = DisplayMode.PLANET_PATH;
+                break;
         }
         drawScreen(panel,displayMode);
         preferences.put("DisplayMode",displayMode.name());
@@ -1221,7 +1230,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
             this.longitude = longitude;
         }
 
-        private static Pattern p = Pattern.compile("^\\s*\"([^\"]*)\"\\s*,\\s*(\\-?\\d+(?:\\.\\d+)?)\\s*,\\s*(\\-?\\d+(?:\\.\\d+)?),\\s*([\\w/]+)\\s*?");
+        private static Pattern p = Pattern.compile("^\\s*\"([^\"]*)\"\\s*,\\s*(-?\\d+(?:\\.\\d+)?)\\s*,\\s*(-?\\d+(?:\\.\\d+)?),\\s*([\\w/]+)\\s*?");
         static Location parse(String s)
         {
             Location location = new Location();
@@ -1238,6 +1247,8 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
 
         @Override
         public boolean equals(Object obj) {
+            if (!(obj instanceof Location))
+                return false;
             Location l = (Location)obj;
             if (l.name == null && this.name == null)
                 return true;

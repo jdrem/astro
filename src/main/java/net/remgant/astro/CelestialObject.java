@@ -11,25 +11,32 @@ public abstract class CelestialObject {
     abstract public double getDecl(double t);
 
     // need to have a sun object to do certain calculations
-    static Sun sun = new Sun();
+    // static Sun sun = new Sun();
+    @SuppressWarnings("AnonymousHasLambdaAlternative")
+    final static ThreadLocal<Sun> sun = new ThreadLocal<Sun>(){
+        @Override
+        protected Sun initialValue() {
+            return new Sun();
+        }
+    };
 
-    transient double sidTime;
-    transient double HA;
-    transient double xhor;
-    transient double yhor;
-    transient double zhor;
+    private transient double xhor;
+    private transient double yhor;
+    @SuppressWarnings("WeakerAccess")
+    protected transient double zhor;
 
+    @SuppressWarnings("WeakerAccess")
     protected void computeAzAltData(double d, double lon, double lat) {
         double UT = d - Math.floor(d);
         d = Math.floor(d);
-        sun.computePos(d);
-        sun.computeSetData(lon, lat);
+        sun.get().computePos(d);
+        sun.get().computeSetData(lon, lat);
 
         if (this instanceof MovingObject)
             ((MovingObject) this).computePos(d);
 
-        sidTime = sun.GMST0 + UT * 360.0 + lon;
-        HA = sidTime - RA;
+        double sidTime = sun.get().GMST0 + UT * 360.0 + lon;
+        double HA = sidTime - RA;
         double x = Trig.cos(HA) * Trig.cos(decl);
         double y = Trig.sin(HA) * Trig.cos(decl);
         double z = Trig.sin(decl);
@@ -39,6 +46,7 @@ public abstract class CelestialObject {
         zhor = x * Trig.cos(lat) + z * Trig.sin(lat);
     }
 
+    @SuppressWarnings("WeakerAccess")
     public double getAzimuth(double d, double lon, double lat) {
         computeAzAltData(d, lon, lat);
         return Trig.rev(Trig.atan2(yhor, xhor) + 180.0);

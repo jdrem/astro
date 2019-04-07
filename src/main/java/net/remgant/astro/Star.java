@@ -7,6 +7,7 @@ public class Star extends FixedObject {
     protected String id2;
     protected char spectralClass;
 
+    @SuppressWarnings("unused")
     public Star(double RA, double decl, String constellation,
                 String id1, String id2, String name, double magnitude,
                 char spectralClass) {
@@ -21,6 +22,7 @@ public class Star extends FixedObject {
 
     }
 
+    @SuppressWarnings("WeakerAccess")
     public Star(String RA, String decl, String constellation,
                 String id1, String id2, String name, String magnitude,
                 String spectralClass) {
@@ -44,6 +46,7 @@ public class Star extends FixedObject {
 
         if (constellation == null || constellation.trim().length() == 0)
             return "";
+        //noinspection ConstantConditions
         if (id2 != null || id2.trim().length() != 0)
             return constellation + id2.trim();
         return constellation + id1.trim();

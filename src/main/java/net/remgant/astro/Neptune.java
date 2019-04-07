@@ -1,5 +1,6 @@
 package net.remgant.astro;
 
+@SuppressWarnings("unused")
 public class Neptune extends Planet {
     public Neptune() {
         N0 = 131.7806;

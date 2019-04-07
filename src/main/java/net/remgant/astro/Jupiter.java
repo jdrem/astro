@@ -1,5 +1,6 @@
 package net.remgant.astro;
 
+@SuppressWarnings("WeakerAccess")
 public class Jupiter extends Planet {
     public Jupiter() {
         N0 = 100.4542;

@@ -1,5 +1,6 @@
 package net.remgant.astro;
 
+@SuppressWarnings("unused")
 public class Pluto extends Planet {
     public Pluto() {
         name = "Pluto";
@@ -37,9 +38,9 @@ public class Pluto extends Planet {
         yh = r * Trig.sin(lonecl) * Trig.cos(latecl);
         zh = r * Trig.sin(latecl);
 
-        sun.computePos(d);
-        double xs = sun.r * Trig.cos(sun.lonsun);
-        double ys = sun.r * Trig.sin(sun.lonsun);
+        sun.get().computePos(d);
+        double xs = sun.get().r * Trig.cos(sun.get().lonsun);
+        double ys = sun.get().r * Trig.sin(sun.get().lonsun);
 
         // compute the geocentric position
         xg = xh + xs;
