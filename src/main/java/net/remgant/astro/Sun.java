@@ -1,6 +1,7 @@
 package net.remgant.astro;
 
 public class Sun extends MovingObject {
+    @SuppressWarnings("WeakerAccess")
     public Sun() {
         name = "Sun";
         symbol = "\u2609";
@@ -79,12 +80,15 @@ public class Sun extends MovingObject {
         return decl;
     }
 
-    double L;
+    @SuppressWarnings("FieldCanBeLocal")
+    private double L;
     double GMST0;
-    double h;
-    double preLHA;
-    double LHA;
-    double UT_Sun_in_south;
+    @SuppressWarnings("FieldCanBeLocal")
+    private double h;
+    @SuppressWarnings("FieldCanBeLocal")
+    private double preLHA;
+    private double LHA;
+    private double UT_Sun_in_south;
 
     void computeSetData(double lon, double lat) {
         L = M + w;
@@ -101,6 +105,7 @@ public class Sun extends MovingObject {
         LHA = Trig.acos(preLHA) / 15.0;
     }
 
+    @SuppressWarnings("unused")
     public double computeTransitTime(double lon, double lat, double d,
                                      double tzOff) {
         d = d - d % 1.0 + 0.5 + tzOff / 24.0;
@@ -109,6 +114,7 @@ public class Sun extends MovingObject {
         return UT_Sun_in_south;
     }
 
+    @SuppressWarnings("WeakerAccess")
     public double computeRiseTime(double lon, double lat, double d,
                                   double tzOff) {
         // adjsut d to be noon local time
@@ -118,6 +124,7 @@ public class Sun extends MovingObject {
         return UT_Sun_in_south - LHA;
     }
 
+    @SuppressWarnings("unused")
     public double computeSetTime(double lon, double lat, double d,
                                  double tzOff) {
         // adjsut d to be noon local time

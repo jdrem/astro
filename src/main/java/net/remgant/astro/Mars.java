@@ -1,5 +1,6 @@
 package net.remgant.astro;
 
+@SuppressWarnings("WeakerAccess")
 public class Mars extends Planet {
     public Mars() {
         N0 = 49.5574;

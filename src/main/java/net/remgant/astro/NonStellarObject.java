@@ -1,10 +1,11 @@
 package net.remgant.astro;
 
+@SuppressWarnings({"FieldCanBeLocal", "unused"})
 public class NonStellarObject extends FixedObject {
-    protected int NGCNumber;
-    protected int messierNumber;
+    private int NGCNumber;
+    private int messierNumber;
     protected double magnitude;
-    protected char type;
+    private char type;
 
     public NonStellarObject(double RA, double decl, int NGCNumber,
                             int messierNumber, double magnitude, char type) {
@@ -12,7 +13,6 @@ public class NonStellarObject extends FixedObject {
         this.decl = decl;
         this.NGCNumber = NGCNumber;
         this.messierNumber = messierNumber;
-        this.name = name;
         this.magnitude = magnitude;
         this.type = type;
     }

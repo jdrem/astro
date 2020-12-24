@@ -1,7 +1,7 @@
 package net.remgant.astro;
 
 public abstract class MovingObject extends CelestialObject {
-    double lastD;
+    private double lastD;
     // These are the orbital elements that are set in the object's
     // constructor.
     double N0, N1;
@@ -102,9 +102,9 @@ public abstract class MovingObject extends CelestialObject {
         this.computePertubations(d);
 
         // compute the position of the sun for this time
-        sun.computePos(d);
-        double xs = sun.r * Trig.cos(sun.lonsun);
-        double ys = sun.r * Trig.sin(sun.lonsun);
+        sun.get().computePos(d);
+        double xs = sun.get().r * Trig.cos(sun.get().lonsun);
+        double ys = sun.get().r * Trig.sin(sun.get().lonsun);
 
         // compute the geocentric position
         xg = xh + xs;
@@ -126,6 +126,7 @@ public abstract class MovingObject extends CelestialObject {
         rg = Math.sqrt(xe * xe + ye * ye + ze * ze);
     }
 
+    @SuppressWarnings("WeakerAccess")
     public double computeMeanAnomaly(double d)
     {
         return M0 + M1 * d;

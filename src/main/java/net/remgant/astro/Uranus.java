@@ -1,5 +1,6 @@
 package net.remgant.astro;
 
+@SuppressWarnings("unused")
 public class Uranus extends Planet {
     public Uranus() {
         N0 = 74.0005;
