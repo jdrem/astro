@@ -4,18 +4,18 @@ import java.awt.*;
 import java.awt.geom.Rectangle2D;
 
 public interface Drawable {
-     public Graphics2D createGraphics();
+    Graphics2D createGraphics();
 
-    public boolean isBW();
+    boolean isBW();
 
-    public double getWidth2D();
+    double getWidth2D();
 
-    public double getHeight2D();
+    double getHeight2D();
 
-    public double getXOffset2D();
+    double getXOffset2D();
 
-    public double getYOffset2D();
+    double getYOffset2D();
 
-    public Rectangle2D getBounds2D();
+    Rectangle2D getBounds2D();
 }
 

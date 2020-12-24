@@ -2,12 +2,10 @@ package net.remgant.astro;
 
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.SimpleTimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@SuppressWarnings("WeakerAccess")
 public class Time {
 
     public static double getDayNumber(TemporalAccessor temporalAccessor) {
@@ -23,8 +21,7 @@ public class Time {
             int s = temporalAccessor.get(ChronoField.SECOND_OF_MINUTE);
 
             double UT = (double) h + (double) (M * 60 + s) / 3600.0;
-            double dd = (double) d + UT / 24.0;
-            return dd;
+            return (double) d + UT / 24.0;
         }
         return d;
     }

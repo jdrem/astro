@@ -1,5 +1,6 @@
 package net.remgant.astro;
 
+@SuppressWarnings("WeakerAccess")
 public class Saturn extends Planet {
     public Saturn() {
         N0 = 113.6634;

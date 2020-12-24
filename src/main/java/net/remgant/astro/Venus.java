@@ -1,5 +1,6 @@
 package net.remgant.astro;
 
+@SuppressWarnings("WeakerAccess")
 public class Venus extends Planet {
     public Venus() {
         N0 = 76.6799;

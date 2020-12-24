@@ -1,6 +1,7 @@
 package net.remgant.astro;
 
 public class Moon extends Planet {
+    @SuppressWarnings("WeakerAccess")
     public Moon() {
         N0 = 125.1228;
         N1 = 0.0529538083;
@@ -19,10 +20,10 @@ public class Moon extends Planet {
 
 
     void computePertubations(double d) {
-        sun.computePos(d);
-        double Ms = sun.M;
+        sun.get().computePos(d);
+        double Ms = sun.get().M;
         double Mm = this.M;
-        double Ls = sun.M + sun.w;
+        double Ls = sun.get().M + sun.get().w;
         double Lm = this.M + this.w + this.N;
         double D = Lm - Ls;
         double F = Lm - this.N;
