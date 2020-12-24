@@ -30,7 +30,7 @@ import java.util.stream.Stream;
 
 public class Gui extends JFrame implements ComponentListener, ActionListener,
         MouseMotionListener, Printable {
-    public static void main(String args[]) {
+    public static void main(String[] args) {
         try {
             UIManager.setLookAndFeel
                     ("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
@@ -47,8 +47,8 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
 
     private int screenSizeX;
     private int screenSizeY;
-    private Panel panel;
-    private Set<Star> stars;
+    private final Panel panel;
+    private final Set<Star> stars;
     private boolean showConBounds;
     private boolean showGrid;
     private boolean showEcliptic;
@@ -61,7 +61,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
     private int fontSize;
     private Font font;
 
-    private Preferences preferences;
+    private final Preferences preferences;
     private double longitude;
     private double latitude;
     @SuppressWarnings({"FieldCanBeLocal", "unused"})
@@ -95,14 +95,14 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         locationMap = loadLocations();
         currentLocation = locationMap.get("Boston, MA, USA");
         if (currentLocation == null)
-            currentLocation = new Location("Boston, MA, USA",-71.1,42.3);
+            currentLocation = new Location("Boston, MA, USA",-71.1,42.3, "America/New_York");
 
         font = new Font(fontName,Font.PLAIN,fontSize);
         char symbol = (new Jupiter()).getSymbol().charAt(0);
         if (!font.canDisplay(symbol))
         {
             GraphicsEnvironment graphicsEnvironment = GraphicsEnvironment.getLocalGraphicsEnvironment();
-            Font fonts[] = graphicsEnvironment.getAllFonts();
+            Font[] fonts = graphicsEnvironment.getAllFonts();
             for (Font f : fonts)
             {
                 if (f.canDisplay(symbol) && f.getStyle() == Font.PLAIN)
@@ -261,7 +261,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         GridBagConstraints c = new GridBagConstraints();
         c.fill = GridBagConstraints.BOTH;
         int numPanels = 6;
-        JPanel panels[] = new JPanel[numPanels];
+        JPanel[] panels = new JPanel[numPanels];
         for (int i = 0; i < numPanels; i++) {
             panels[i] = new JPanel();
             // panels[i].setLayout(new GridBagLayout());
@@ -293,7 +293,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         panels[p++].add(showEclipticCheckBox, BorderLayout.WEST);
 
 
-        JLabel maxMagnitudeLabel = new JLabel("Max Manitude");
+        JLabel maxMagnitudeLabel = new JLabel("Max Magnitude");
         panels[p].add(maxMagnitudeLabel, BorderLayout.WEST);
 
         final DecimalField maxMagnitudeField =
@@ -341,7 +341,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
 
         GridBagConstraints c = new GridBagConstraints();
         c.fill = GridBagConstraints.BOTH;
-        JPanel panels[] = new JPanel[5];
+        JPanel[] panels = new JPanel[5];
         //noinspection Duplicates
         for (int i = 0; i < 5; i++) {
             panels[i] = new JPanel();
@@ -423,7 +423,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
 
         GridBagConstraints c = new GridBagConstraints();
         c.fill = GridBagConstraints.BOTH;
-        JPanel panels[] = new JPanel[3];
+        JPanel[] panels = new JPanel[3];
         for (int i = 0; i < panels.length; i++) {
             panels[i] = new JPanel();
             panels[i].setLayout(new BorderLayout());
@@ -500,7 +500,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
 
         GridBagConstraints c = new GridBagConstraints();
         c.fill = GridBagConstraints.BOTH;
-        JPanel panels[] = new JPanel[5];
+        JPanel[] panels = new JPanel[5];
         //noinspection Duplicates
         for ( int i = 0; i < 5; i++) {
             panels[i] = new JPanel();
@@ -512,14 +512,11 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         c.gridwidth = 1;
         c.gridheight = 1;
 
-        @SuppressWarnings("unchecked")
-        DefaultComboBoxModel model = new DefaultComboBoxModel(locationMap.values().toArray());
+        DefaultComboBoxModel<Location> model = new DefaultComboBoxModel<>(locationMap.values().toArray(new Location[0]));
         model.setSelectedItem(currentLocation);
-        @SuppressWarnings("unchecked")
-        JComboBox locationList = new JComboBox(model);
+        JComboBox<Location> locationList = new JComboBox<>(model);
         locationList.setEditable(true);
         panels[0].add(locationList,BorderLayout.CENTER);
-
 
         JButton okButton = new JButton("OK");
         c.gridx = 0;
@@ -661,8 +658,8 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         double width = drawable.getWidth2D();
         double height = drawable.getHeight2D();
         System.out.printf("w = %f, h = %f%n",width,height);
-        MovingObject planets[] = new MovingObject[]{new Moon(),new Sun(),new Venus(),new Mars(),new Jupiter(),new Saturn(),new Mercury()};
-        Color colors[] = new Color[]{Color.WHITE,Color.YELLOW,Color.WHITE,Color.RED,Color.MAGENTA,Color.ORANGE,Color.GRAY};
+        MovingObject[] planets = new MovingObject[]{new Moon(),new Sun(),new Venus(),new Mars(),new Jupiter(),new Saturn(),new Mercury()};
+        Color[] colors = new Color[]{Color.WHITE,Color.YELLOW,Color.WHITE,Color.RED,Color.MAGENTA,Color.ORANGE,Color.GRAY};
         g.setColor(drawable.isBW()?Color.BLACK:Color.YELLOW);
         ZonedDateTime zonedDateTime = ZonedDateTime.of(displayDate.atZone(ZoneOffset.UTC).getYear(),3,21, 0, 0,0, 0,ZoneOffset.UTC);
         for (int j=0; j<planets.length; j++)
@@ -718,7 +715,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
                             getClass().getResource("boundaries.dat").openStream()));
             String line = in.readLine();
             while (line != null && line.length() > 0) {
-                double d[] = tokenizeDoubles(line);
+                double[] d = tokenizeDoubles(line);
                 double x1 = width -  (d[0] / 360.0 * width);
                 double y1 = (((90.0 - d[1]) / 180.0) *  height);
                 double x2 = width - (d[2] / 360.0 * width);
@@ -851,7 +848,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
     }
 
     private void drawSunPathScreen() {
-        ZonedDateTime zdt[] = new ZonedDateTime[3];
+        ZonedDateTime[] zdt = new ZonedDateTime[3];
         zdt[0] =  ZonedDateTime.of(displayDate.atZone(ZoneOffset.UTC).getYear(),Month.DECEMBER.getValue(),21,
                 0, 0,0, 0,ZoneOffset.UTC);
         zdt[0] =  ZonedDateTime.of(displayDate.atZone(ZoneOffset.UTC).getYear(),Month.MARCH.getValue(),21,
@@ -969,7 +966,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
     private static double[] tokenizeDoubles(String line) {
         StringTokenizer st = new StringTokenizer(line, ",");
         int l = st.countTokens();
-        double r[] = new double[l];
+        double[] r = new double[l];
         for (int i = 0; st.hasMoreTokens(); i++) {
             r[i] = Double.parseDouble(st.nextToken());
         }
@@ -979,7 +976,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
     private Set<Star> loadStars() {
         try (InputStream in = getClass().getResource("bsc.json").openStream()) {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            byte buffer[] = new byte[4096];
+            byte[] buffer = new byte[4096];
             while (in.available() > 0) {
                 int length = in.read(buffer);
                 if (length == -1)
@@ -997,7 +994,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         }
     }
 
-    class Panel extends JPanel implements Drawable {
+    static class Panel extends JPanel implements Drawable {
         private Dimension dim;
         private BufferedImage image;
 
@@ -1025,7 +1022,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
 
              Graphics2D g = image.createGraphics();
             g.setColor(c);
-            g.fill(new Ellipse2D.Double((double)x,(double)y,1.0,1.0));
+            g.fill(new Ellipse2D.Double(x, y,1.0,1.0));
 
         }
 
@@ -1033,7 +1030,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         void drawFilledCircle(int x, int y, int r, Color c) {
             Graphics2D g = image.createGraphics();
             g.setColor(c);
-            g.fill(new Ellipse2D.Double((double)x/2.0,(double)y/2.0,(double)r,(double)r));
+            g.fill(new Ellipse2D.Double((double)x/2.0,(double)y/2.0, r, r));
         }
 
         public void paintComponent(Graphics g) {
@@ -1053,12 +1050,12 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
 
         @Override
         public double getWidth2D() {
-            return (double)getWidth();
+            return getWidth();
         }
 
         @Override
         public double getHeight2D() {
-            return (double)getHeight();
+            return getHeight();
         }
 
         @Override
@@ -1077,7 +1074,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         }
     }
 
-    class PrintPage implements Drawable {
+    static class PrintPage implements Drawable {
         Graphics g;
         int width;
         int height;
@@ -1118,22 +1115,22 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
 
         @Override
         public double getWidth2D() {
-            return (double)width;
+            return width;
         }
 
         @Override
         public double getHeight2D() {
-            return (double)height;
+            return height;
         }
 
         @Override
         public double getXOffset2D() {
-            return (double)xOff;
+            return xOff;
         }
 
         @Override
         public double getYOffset2D() {
-            return (double)yOff;
+            return yOff;
         }
 
         @Override
@@ -1144,13 +1141,16 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
 
 
     // these next four methods are required when implementing
-// component listener
+    // component listener
+    @Override
     public void componentHidden(ComponentEvent e) {
     }
 
+    @Override
     public void componentMoved(ComponentEvent e) {
     }
 
+    @Override
     public void componentResized(ComponentEvent e) {
         screenSizeX = panel.getWidth();
         screenSizeY = panel.getHeight();
@@ -1161,10 +1161,12 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         preferences.putInt("ScreenSizeY", screenSizeY);
     }
 
+    @Override
     public void componentShown(ComponentEvent e) {
     }
 
     // this is required when implementing ActionListener
+    @Override
     public void actionPerformed(ActionEvent e) {
         switch (e.getActionCommand()) {
             case "Full Sky":
@@ -1188,10 +1190,12 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
     }
 
     // Next two are required for MouseMotionListener
+    @Override
     public void mouseDragged(MouseEvent e) {
 
     }
 
+    @Override
     public void mouseMoved(MouseEvent e) {
         if (displayMode == DisplayMode.RISE_SET)
         {
@@ -1216,9 +1220,9 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         g.fill(new Rectangle2D.Double(x,y,w,h));
 
         Point2D p;
-        MovingObject mo[] = new MovingObject[]{new Moon(),new Sun(),new Venus(),new Mars(),new Jupiter(),new Saturn(),new Mercury()};
-        Color colors[] = new Color[]{Color.WHITE,Color.YELLOW,Color.WHITE,Color.RED,Color.MAGENTA,Color.ORANGE,Color.BLACK};
-        double minSize[] = new double[]{6.0,6.0,2.0,2.0,2.0,2.0,2.0};
+        MovingObject[] mo = new MovingObject[]{new Moon(),new Sun(),new Venus(),new Mars(),new Jupiter(),new Saturn(),new Mercury()};
+        Color[] colors = new Color[]{Color.WHITE,Color.YELLOW,Color.WHITE,Color.RED,Color.MAGENTA,Color.ORANGE,Color.BLACK};
+        double[] minSize = new double[]{6.0,6.0,2.0,2.0,2.0,2.0,2.0};
 
         for (int i=0; i<mo.length; i++)
         {
@@ -1259,6 +1263,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
     }
 
     // Required for Printable interface
+    @Override
     public int print(Graphics g, PageFormat pf, int pageIndex) {
         if (pageIndex > 0)
             return Printable.NO_SUCH_PAGE;
@@ -1280,9 +1285,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
             String line = in.readLine();
             while (line != null)
             {
-                Location location = Location.parse(line);
-                if (location != null)
-                    map.put(location.name,location);
+                Location.parse(line).ifPresent(l -> map.put(l.name, l));
                 line = in.readLine();
             }
         } catch (EOFException ignored) {
@@ -1295,32 +1298,24 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
     static class Location
     {
         String name;
-        double lattitude;
+        double latitude;
         double longitude;
         String timeZone;
 
-        Location() {
-        }
-
-        Location(String name, double lattitude, double longitude) {
+        Location(String name, double latitude, double longitude, String timeZone) {
             this.name = name;
-            this.lattitude = lattitude;
+            this.latitude = latitude;
             this.longitude = longitude;
+            this.timeZone = timeZone;
         }
 
-        private static Pattern p = Pattern.compile("^\\s*\"([^\"]*)\"\\s*,\\s*(-?\\d+(?:\\.\\d+)?)\\s*,\\s*(-?\\d+(?:\\.\\d+)?),\\s*([\\w/]+)\\s*?");
-        static Location parse(String s)
+        private static final Pattern p = Pattern.compile("^\\s*\"([^\"]*)\"\\s*,\\s*(-?\\d+(?:\\.\\d+)?)\\s*,\\s*(-?\\d+(?:\\.\\d+)?),\\s*([\\w/]+)\\s*?");
+        static Optional<Location> parse(String s)
         {
-            Location location = new Location();
             Matcher m = p.matcher(s);
             if (m.matches())
-            {
-                location.name = m.group(1);
-                location.lattitude = Double.parseDouble(m.group(2));
-                location.longitude = Double.parseDouble(m.group(3));
-                location.timeZone = m.group(4);
-            }
-            return location;
+                return Optional.of(new Location(m.group(1), Double.parseDouble(m.group(2)),Double.parseDouble(m.group(3)),m.group(4)));
+            return Optional.empty();
         }
 
         @Override
