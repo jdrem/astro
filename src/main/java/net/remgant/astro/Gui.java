@@ -25,6 +25,8 @@ import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Gui extends JFrame implements ComponentListener, ActionListener,
         MouseMotionListener, Printable {
@@ -55,6 +57,8 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
     double maxMagnitude;
     enum DisplayMode{FULL_SKY,LOCAL_SKY,SUN_PATH,RISE_SET,PLANET_PATH}
     DisplayMode displayMode;
+    private String fontName;
+    private int fontSize;
     Font font;
 
     Preferences preferences;
@@ -79,6 +83,8 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         locationName = preferences.get("location.name","Boston, MA, USA");
         timeZoneName = preferences.get("location.timezone","America/New_York");
         currentTimeMode = preferences.getBoolean("date.useCurrentTime",true);
+        fontName = preferences.get("font.name", Font.SANS_SERIF);
+        fontSize = preferences.getInt("font.size", 16);
         LocalDate localDate = LocalDate.now();
         int displayDateYear = preferences.getInt("date.year", localDate.getYear());
         int displayDateMonth = preferences.getInt("date.month",localDate.getMonthValue());
@@ -91,7 +97,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         if (currentLocation == null)
             currentLocation = new Location("Boston, MA, USA",-71.1,42.3);
 
-        font = new Font(Font.SANS_SERIF,Font.PLAIN,12);
+        font = new Font(fontName,Font.PLAIN,fontSize);
         char symbol = (new Jupiter()).getSymbol().charAt(0);
         if (!font.canDisplay(symbol))
         {
@@ -101,7 +107,8 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
             {
                 if (f.canDisplay(symbol) && f.getStyle() == Font.PLAIN)
                 {
-                    font = new Font(f.getFontName(),Font.PLAIN,12);
+                    font = new Font(f.getFontName(),Font.PLAIN,fontSize);
+                    fontName = font.getName();
                     break;
                 }
             }
@@ -170,6 +177,10 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         JMenuItem locationMenuItem = new JMenuItem("Location");
         locationMenuItem.addActionListener(e -> editLocation());
         EditMenu.add(locationMenuItem);
+
+        JMenuItem fontMenuItem = new JMenuItem("Font");
+        fontMenuItem.addActionListener(e -> editFont());
+        EditMenu.add(fontMenuItem);
 
         JMenu ModeMenu = new JMenu("Mode");
         myMenuBar.add(ModeMenu);
@@ -486,7 +497,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
 
     private void editLocation()
     {
-        final JDialog d = new JDialog(Gui.this, "Date", true);
+        final JDialog d = new JDialog(Gui.this, "Location", true);
         Container cp = d.getContentPane();
         cp.setLayout(new GridBagLayout());
 
@@ -522,6 +533,73 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         panels[4].add(cancelButton, BorderLayout.EAST);
         cancelButton.addActionListener(e -> d.dispose());
 
+
+        d.addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                e.getWindow().dispose();
+            }
+        });
+        d.setBounds(0, 0, 300, 175);
+        d.setVisible(true);
+    }
+
+    private void editFont() {
+        final JDialog d = new JDialog(Gui.this, "Font", true);
+        Container cp = d.getContentPane();
+        cp.setLayout(new GridBagLayout());
+
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.BOTH;
+        JPanel[] panels = new JPanel[5];
+        for (int i = 0; i < 5; i++) {
+            panels[i] = new JPanel();
+            panels[i].setLayout(new BorderLayout());
+            c.gridx = 0;
+            c.gridy = i;
+            cp.add(panels[i], c);
+        }
+        c.gridwidth = 1;
+        c.gridheight = 1;
+
+        char symbol = (new Jupiter()).getSymbol().charAt(0);
+        GraphicsEnvironment graphicsEnvironment = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        Vector<String> fontNames = Stream.of(graphicsEnvironment.getAllFonts())
+                .filter(f -> f.canDisplay(symbol) && f.isPlain())
+                .map(Font::getFontName)
+                .collect(Collectors.toCollection(Vector::new));
+        DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>(fontNames);
+        model.setSelectedItem(font.getFontName());
+        JComboBox<String> fontNameComboBox = new JComboBox<>(model);
+        fontNameComboBox.setEditable(true);
+        panels[0].add(fontNameComboBox,BorderLayout.CENTER);
+
+        panels[1].add(new JLabel("Size"), BorderLayout.WEST);
+        Set<Integer> sizes = new HashSet<>(Arrays.asList(8, 10, 12, 16, 24, 32, 64));
+        sizes.add(font.getSize());
+        DefaultComboBoxModel<Integer> sizesModel = new DefaultComboBoxModel<>(sizes.stream().sorted().collect(Collectors.toCollection(Vector::new)));
+        sizesModel.setSelectedItem(font.getSize());
+        JComboBox<Integer> sizesBox = new JComboBox<>(sizesModel);
+        sizesBox.setEditable(true);
+        panels[1].add(sizesBox, BorderLayout.EAST);
+
+        JButton okButton = new JButton("OK");
+        c.gridx = 0;
+        c.gridy = 0;
+        panels[4].add(okButton, BorderLayout.WEST);
+        okButton.addActionListener(e -> {
+            fontName = fontNameComboBox.getItemAt(fontNameComboBox.getSelectedIndex());
+            fontSize = sizesBox.getItemAt(sizesBox.getSelectedIndex());
+            font = new Font(fontName, Font.PLAIN, fontSize);
+            preferences.put("font.name", fontName);
+            preferences.putInt("font.size", fontSize);
+            d.dispose();
+        });
+
+        JButton cancelButton = new JButton("Cancel");
+        c.gridx = 2;
+        c.gridy = 0;
+        panels[4].add(cancelButton, BorderLayout.EAST);
+        cancelButton.addActionListener(e -> d.dispose());
 
         d.addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
