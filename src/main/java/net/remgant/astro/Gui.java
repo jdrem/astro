@@ -102,16 +102,14 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         if (!font.canDisplay(symbol))
         {
             GraphicsEnvironment graphicsEnvironment = GraphicsEnvironment.getLocalGraphicsEnvironment();
-            Font[] fonts = graphicsEnvironment.getAllFonts();
-            for (Font f : fonts)
-            {
-                if (f.canDisplay(symbol) && f.getStyle() == Font.PLAIN)
-                {
-                    font = new Font(f.getFontName(),Font.PLAIN,fontSize);
-                    fontName = font.getName();
-                    break;
-                }
-            }
+            font = Stream.of(graphicsEnvironment.getAllFonts())
+                    .filter(f -> f.canDisplay(symbol) && f.getStyle() == Font.PLAIN)
+                    .findAny()
+                    .orElse(font);
+            fontName = font.getName();
+            fontSize = font.getSize();
+            preferences.put("font.name", fontName);
+            preferences.putInt("font.size", fontSize);
         }
         System.out.println("using font "+font);
 
