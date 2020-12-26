@@ -625,7 +625,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
                 drawLocalScreen(drawable);
                 break;
             case SUN_PATH:
-                drawSunPathScreen();
+                drawSunPathScreen(drawable);
                 break;
             case RISE_SET:
                 drawRiseSetScreen(drawable);
@@ -785,7 +785,6 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         System.out.println(d);
         double lon = -71.4750;
         double lat = 42.4750;
-        Point2D p;
 
         Graphics2D g = drawable.createGraphics();
         Rectangle2D bounds = drawable.getBounds2D();
@@ -800,7 +799,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
             g.setColor(Color.BLACK);
             g.fill(e);
         }
-
+        Optional<Point2D> point;
         for (Star o : stars) {
             double az = o.getAzimuth(d, lon, lat);
             double alt = o.getAltitude(d, lon, lat);
@@ -808,52 +807,49 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
             if (magnitude > maxMagnitude)
                   continue;
             if (rectDisplayMode)
-                p = getRectCoordinates2D(az, alt,bounds);
+                point = getRectCoordinates(az, alt,bounds);
             else
-                p = getCircCoordinates(az, alt,bounds);
-            if (p == null)
-                continue;
-
-            double x = p.getX();
-            double y = p.getY();
-            Color c = drawable.isBW() ? Color.BLACK : Color.WHITE;
-            g.setColor(c);
-            g.fill(new Ellipse2D.Double(x,y,2.0,2.0));
+                point = getCircCoordinates(az, alt,bounds);
+            point.ifPresent(p -> {
+                double x = p.getX();
+                double y = p.getY();
+                Color c = drawable.isBW() ? Color.BLACK : Color.WHITE;
+                g.setColor(c);
+                g.fill(new Ellipse2D.Double(x,y,2.0,2.0));
+            });
         }
         Moon moon = new Moon();
         double az = moon.getAzimuth(d, lon, lat);
         double alt = moon.getAltitude(d, lon, lat);
         if (rectDisplayMode)
-            p = getRectCoordinates2D(az, alt, bounds);
+            point = getRectCoordinates(az, alt, bounds);
         else
-            p = getCircCoordinates(az, alt,bounds);
-        System.out.println("moon: " + az + " " + alt + " " + p);
-        if (p != null) {
+            point = getCircCoordinates(az, alt,bounds);
+        point.ifPresent(p -> {
             double size = (moon.getSize(d) / 360.0 * bounds.getWidth());
             if (size < 6.0)
                 size = 6.0;
             g.setColor(Color.BLUE);
             g.fill(new Ellipse2D.Double(p.getX(),p.getY(),size,size));
-        }
+        });
 
         Sun sun = new Sun();
         az = sun.getAzimuth(d, lon, lat);
         alt = sun.getAltitude(d, lon, lat);
         if (rectDisplayMode)
-            p = getRectCoordinates2D(az, alt, bounds);
+            point = getRectCoordinates(az, alt, bounds);
         else
-            p = getCircCoordinates(az, alt,bounds);
-        System.out.println("sun: " + az + " " + alt + " " + p);
-        if (p == null)
-            return;
-        double size = (moon.getSize(d) / 360.0 * bounds.getWidth());
-        if (size < 6.0)
-            size = 6.0;
-        g.setColor(Color.YELLOW);
-        g.fill(new Ellipse2D.Double(p.getX(),p.getY(),size,size));
+            point = getCircCoordinates(az, alt, bounds);
+       point.ifPresent(p -> {
+           double size = (moon.getSize(d) / 360.0 * bounds.getWidth());
+           if (size < 6.0)
+               size = 6.0;
+           g.setColor(Color.YELLOW);
+           g.fill(new Ellipse2D.Double(p.getX(), p.getY(), size, size));
+       });
     }
 
-    private void drawSunPathScreen() {
+    private void drawSunPathScreen(Drawable drawable) {
         ZonedDateTime[] zdt = new ZonedDateTime[3];
         zdt[0] =  ZonedDateTime.of(displayDate.getYear(),Month.DECEMBER.getValue(),21,
                 0, 0,0, 0,ZoneOffset.UTC);
@@ -863,14 +859,17 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
                 0, 0,0, 0,ZoneOffset.UTC);
         double lon = -71.4750;
         double lat = 42.4750;
-        Point p;
 
+        Rectangle2D bounds = drawable.getBounds2D();
         if (!rectDisplayMode) {
+            fillScreen(drawable, bounds, Color.gray);
             panel.clear(Color.gray);
             int r = screenSizeX;
             if (r > screenSizeY)
                 r = screenSizeY;
             panel.drawFilledCircle(screenSizeX / 2, screenSizeY / 2, r, Color.black);
+        } else {
+            fillScreen(drawable, bounds, Color.black);
         }
 
         Sun sun = new Sun();
@@ -879,14 +878,17 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
             for (int i = 0; i < 1024; i++) {
                 double az = sun.getAzimuth(d, lon, lat);
                 double alt = sun.getAltitude(d, lon, lat);
+                Optional<Point2D> point;
                 if (rectDisplayMode)
-                    p = getRectCoordinates(az, alt);
+                    point = getRectCoordinates(az, alt, bounds);
                 else
-                    p = getCircCoordinates(az, alt);
+                    point = getCircCoordinates(az, alt, bounds);
                 d += 1.0 / 1024.0;
-                if (p == null)
-                    continue;
-                panel.drawPoint(p.x, p.y, Color.yellow);
+                point.ifPresent(p -> {
+                    Graphics2D g = drawable.createGraphics();
+                    g.setColor(Color.YELLOW);
+                    g.fill(new Ellipse2D.Double(p.getX(),p.getY(),2.5,2.5));
+                });
             }
         }
     }
@@ -902,53 +904,17 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         g.fill(new Rectangle2D.Double(x,y,w,h));
     }
 
-
-    private Point getRectCoordinates(double az, double alt) {
-        int x = (int) (az / 360.0 * (double) screenSizeX);
+    private Optional<Point2D> getRectCoordinates(double az, double alt, Rectangle2D bounds) {
         if (alt < 0.0)
-            return null;
-        int y = (int) (((90.0 - alt) / 90.0) * (double) screenSizeY);
-        return new Point(x, y);
-    }
-
-    private Point2D getRectCoordinates2D(double az, double alt,Rectangle2D bounds) {
-        if (alt < 0.0)
-            return null;
+            return Optional.empty();
         double x = az / 360.0 * bounds.getWidth();
         double y = ((90.0 - alt)  / 90.0) * bounds.getHeight();
-        return new Point2D.Double(x,y);
+        return Optional.of(new Point2D.Double(x,y));
     }
 
-    private Point getCircCoordinates(double az, double alt) {
-        if (alt < 0.0)
-            return null;
-        // normalize the altitude
-        alt = (90.0 - alt) / 90.0;
-        // adjust the azimuth
-        az = Trig.rev(az + 90.0);
-        double x = Trig.cos(az) * alt;
-        double y = Trig.sin(az) * alt;
-        int m;
-        int xa;
-        int ya;
-        if (screenSizeX > screenSizeY) {
-            m = screenSizeY;
-            ya = 0;
-            xa = (screenSizeX - screenSizeY) / 2;
-        } else {
-            m = screenSizeX;
-            ya = (screenSizeY - screenSizeX) / 2;
-            xa = 0;
-        }
-        Point p = new Point();
-        p.x = (int) (x * ((double) m / 2.0) + (double) m / 2.0) + xa;
-        p.y = (int) ((double) m / 2.0 - y * ((double) m / 2.0)) + ya;
-        return p;
-    }
-
-    private Point2D getCircCoordinates(double az, double alt, Rectangle2D bounds) {
+    private Optional<Point2D> getCircCoordinates(double az, double alt, Rectangle2D bounds) {
          if (alt < 0.0)
-            return null;
+            return Optional.empty();
         // normalize the altitude
         alt = (90.0 - alt) / 90.0;
         // adjust the azimuth
@@ -967,7 +933,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
             ya = (bounds.getHeight() - bounds.getWidth()) / 2.0;
             xa = 0.0;
         }
-        return new Point2D.Double((x * (m / 2.0) + m / 2.0) + xa,((m / 2.0 - y *  m / 2.0)) + ya);
+        return Optional.of(new Point2D.Double((x * (m / 2.0) + m / 2.0) + xa,((m / 2.0 - y *  m / 2.0)) + ya));
     }
 
     private static double[] tokenizeDoubles(String line) {
@@ -1022,15 +988,6 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
             g.clearRect(0, 0, dim.width, dim.height);
             g.setColor(c);
             g.fillRect(0, 0, dim.width, dim.height);
-        }
-
-        @SuppressWarnings("SameParameterValue")
-        void drawPoint(int x, int y, Color c) {
-
-             Graphics2D g = image.createGraphics();
-            g.setColor(c);
-            g.fill(new Ellipse2D.Double(x, y,1.0,1.0));
-
         }
 
         @SuppressWarnings("SameParameterValue")
@@ -1212,8 +1169,8 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         }
     }
 
-    private void drawPlanets(Drawable drawable, Point point) {
-        ZonedDateTime zdt = ZonedDateTime.of(displayDate, LocalTime.of(0,0,0),ZoneId.of(timeZoneName)).plusSeconds((int)((point.getX() / getBounds().getWidth()) * 86400));
+    private void drawPlanets(Drawable drawable, Point position) {
+        ZonedDateTime zdt = ZonedDateTime.of(displayDate, LocalTime.of(0,0,0),ZoneId.of(timeZoneName)).plusSeconds((int)((position.getX() / getBounds().getWidth()) * 86400));
         double d = net.remgant.astro.Time.getDayNumber(zdt);
         Rectangle2D bounds = drawable.getBounds2D();
 
@@ -1226,7 +1183,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         g.setColor(Color.GRAY);
         g.fill(new Rectangle2D.Double(x,y,w,h));
 
-        Point2D p;
+        Optional<Point2D> point;
         MovingObject[] mo = new MovingObject[]{new Moon(),new Sun(),new Venus(),new Mars(),new Jupiter(),new Saturn(),new Mercury()};
         Color[] colors = new Color[]{Color.WHITE,Color.YELLOW,Color.WHITE,Color.RED,Color.MAGENTA,Color.ORANGE,Color.BLACK};
         double[] minSize = new double[]{6.0,6.0,2.0,2.0,2.0,2.0,2.0};
@@ -1235,17 +1192,17 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         {
             double az = mo[i].getAzimuth(d, longitude, latitude);
             double alt = mo[i].getAltitude(d, longitude, latitude);
-            p = getRectCoordinates2D(az, alt, bounds);
-            if (p == null)
-                continue;
-            GlyphVector gv = font.createGlyphVector(fontRenderContext,mo[i].getSymbol());
-            Area a = new Area(gv.getOutline());
-            a.transform(AffineTransform.getTranslateInstance(p.getX(),p.getY()));
-            g.setColor(colors[i]);
-            g.fill(new Ellipse2D.Double(p.getX(),p.getY(),minSize[i],minSize[i]));
-            g.setColor(Color.BLACK);
-            g.fill(a);
-
+            point = getRectCoordinates(az, alt, bounds);
+            if (point.isPresent()) {
+                Point2D p = point.get();
+                GlyphVector gv = font.createGlyphVector(fontRenderContext, mo[i].getSymbol());
+                Area a = new Area(gv.getOutline());
+                a.transform(AffineTransform.getTranslateInstance(p.getX(), p.getY()));
+                g.setColor(colors[i]);
+                g.fill(new Ellipse2D.Double(p.getX(), p.getY(), minSize[i], minSize[i]));
+                g.setColor(Color.BLACK);
+                g.fill(a);
+            }
         }
         System.out.println();
     }
