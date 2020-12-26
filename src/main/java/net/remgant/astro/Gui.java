@@ -67,7 +67,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
     @SuppressWarnings({"FieldCanBeLocal", "unused"})
     private String locationName;
     private String timeZoneName;
-    private Instant displayDate;
+    private LocalDate displayDate;
     private Map<String,Location> locationMap;
     private Location currentLocation;
 
@@ -89,8 +89,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         int displayDateYear = preferences.getInt("date.year", localDate.getYear());
         int displayDateMonth = preferences.getInt("date.month",localDate.getMonthValue());
         int displayDateDay = preferences.getInt("date.day_of_month",localDate.getDayOfMonth());
-        displayDate = ZonedDateTime.of(LocalDate.of(displayDateYear,displayDateMonth,displayDateDay),
-                LocalTime.of(0,0,0), ZoneId.of(timeZoneName)).toInstant();
+        displayDate = LocalDate.of(displayDateYear,displayDateMonth,displayDateDay);
 
         locationMap = loadLocations();
         currentLocation = locationMap.get("Boston, MA, USA");
@@ -443,7 +442,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         panels[0].add(setTimeButton, BorderLayout.EAST);
 
         DatePicker datePicker = new DatePicker();
-        datePicker.setDate(displayDate.atZone(ZoneId.of(timeZoneName)).toLocalDate());
+        datePicker.setDate(displayDate);
         panels[1].add(datePicker);
 
         currentTimeButton.addChangeListener(e -> {
@@ -465,8 +464,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
                 int newYear = datePicker.getDate().getYear();
                 int newMonth = datePicker.getDate().getMonthValue();
                 int newDay = datePicker.getDate().getDayOfMonth();
-                displayDate = ZonedDateTime.of(LocalDate.of(newYear, newMonth, newDay),
-                        LocalTime.of(0,0,0),ZoneId.of(timeZoneName)).toInstant();
+                displayDate = LocalDate.of(newYear, newMonth, newDay);
                 currentTimeMode = currentTimeButton.isSelected();
                 preferences.putBoolean("date.useCurrentTime", currentTimeMode);
                 preferences.putInt("date.year", newYear);
@@ -669,7 +667,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         MovingObject[] planets = new MovingObject[]{new Moon(),new Sun(),new Venus(),new Mars(),new Jupiter(),new Saturn(),new Mercury()};
         Color[] colors = new Color[]{Color.WHITE,Color.YELLOW,Color.WHITE,Color.RED,Color.MAGENTA,Color.ORANGE,Color.GRAY};
         g.setColor(drawable.isBW()?Color.BLACK:Color.YELLOW);
-        ZonedDateTime zonedDateTime = ZonedDateTime.of(displayDate.atZone(ZoneOffset.UTC).getYear(),3,21, 0, 0,0, 0,ZoneOffset.UTC);
+        ZonedDateTime zonedDateTime = ZonedDateTime.of(displayDate.getYear(),3,21, 0, 0,0, 0,ZoneOffset.UTC);
         for (int j=0; j<planets.length; j++)
         {
             if (j != 2 && j != 3 && j != 6)
@@ -767,7 +765,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         double height = drawable.getHeight2D();
         g.setColor(drawable.isBW()?Color.BLACK:Color.YELLOW);
         Sun sun = new Sun();
-        ZonedDateTime zonedDateTime = ZonedDateTime.of(displayDate.atZone(ZoneOffset.UTC).getYear(),
+        ZonedDateTime zonedDateTime = ZonedDateTime.of(displayDate.getYear(),
                 3,21, 0, 0,0, 0,ZoneOffset.UTC);
         double d = net.remgant.astro.Time.getDayNumber(zonedDateTime);
         for (int i = 0; i < 3650; i++) {
@@ -783,7 +781,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
     private void drawLocalScreen(Drawable drawable)
     {
         System.out.println("Cal: "+displayDate.toString());
-        double d = net.remgant.astro.Time.getDayNumber(displayDate.atZone(ZoneId.of(timeZoneName)).toLocalDate());
+        double d = net.remgant.astro.Time.getDayNumber(displayDate);
         System.out.println(d);
         double lon = -71.4750;
         double lat = 42.4750;
@@ -857,11 +855,11 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
 
     private void drawSunPathScreen() {
         ZonedDateTime[] zdt = new ZonedDateTime[3];
-        zdt[0] =  ZonedDateTime.of(displayDate.atZone(ZoneOffset.UTC).getYear(),Month.DECEMBER.getValue(),21,
+        zdt[0] =  ZonedDateTime.of(displayDate.getYear(),Month.DECEMBER.getValue(),21,
                 0, 0,0, 0,ZoneOffset.UTC);
-        zdt[0] =  ZonedDateTime.of(displayDate.atZone(ZoneOffset.UTC).getYear(),Month.MARCH.getValue(),21,
+        zdt[1] =  ZonedDateTime.of(displayDate.getYear(),Month.MARCH.getValue(),21,
                 0, 0,0, 0,ZoneOffset.UTC);
-        zdt[0] =  ZonedDateTime.of(displayDate.atZone(ZoneOffset.UTC).getYear(), Month.JUNE.getValue(),21,
+        zdt[2] =  ZonedDateTime.of(displayDate.getYear(), Month.JUNE.getValue(),21,
                 0, 0,0, 0,ZoneOffset.UTC);
         double lon = -71.4750;
         double lat = 42.4750;
@@ -885,6 +883,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
                     p = getRectCoordinates(az, alt);
                 else
                     p = getCircCoordinates(az, alt);
+                d += 1.0 / 1024.0;
                 if (p == null)
                     continue;
                 panel.drawPoint(p.x, p.y, Color.yellow);
@@ -1214,7 +1213,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
     }
 
     private void drawPlanets(Drawable drawable, Point point) {
-        ZonedDateTime zdt = displayDate.atZone(ZoneId.of(timeZoneName)).plusSeconds((int)((point.getX() / getBounds().getWidth()) * 86400));
+        ZonedDateTime zdt = ZonedDateTime.of(displayDate, LocalTime.of(0,0,0),ZoneId.of(timeZoneName)).plusSeconds((int)((point.getX() / getBounds().getWidth()) * 86400));
         double d = net.remgant.astro.Time.getDayNumber(zdt);
         Rectangle2D bounds = drawable.getBounds2D();
 
