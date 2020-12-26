@@ -21,6 +21,9 @@ public class Time {
             int s = temporalAccessor.get(ChronoField.SECOND_OF_MINUTE);
 
             double UT = (double) h + (double) (M * 60 + s) / 3600.0;
+            if (temporalAccessor.isSupported(ChronoField.OFFSET_SECONDS)) {
+                UT -= (double)temporalAccessor.get(ChronoField.OFFSET_SECONDS) / 3600.0;
+            }
             return (double) d + UT / 24.0;
         }
         return d;
