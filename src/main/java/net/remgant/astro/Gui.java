@@ -1197,15 +1197,15 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
     public void mouseMoved(MouseEvent e) {
         if (displayMode == DisplayMode.RISE_SET)
         {
-            positionCursor(panel,e.getLocationOnScreen());
-            drawPlanets(panel,e.getLocationOnScreen());
+            positionCursor(panel,e.getPoint());
+            drawPlanets(panel,e.getPoint());
             panel.repaint();
         }
     }
 
     private void drawPlanets(Drawable drawable, Point point) {
-        double d = Math.floor(net.remgant.astro.Time.getDayNumber(displayDate.atZone(ZoneId.of(timeZoneName)).toLocalDate()))
-            + point.getX() / getBounds().getWidth();
+        ZonedDateTime zdt = displayDate.atZone(ZoneId.of(timeZoneName)).plusSeconds((int)((point.getX() / getBounds().getWidth()) * 86400));
+        double d = net.remgant.astro.Time.getDayNumber(zdt);
         Rectangle2D bounds = drawable.getBounds2D();
 
         Graphics2D g = drawable.createGraphics();
