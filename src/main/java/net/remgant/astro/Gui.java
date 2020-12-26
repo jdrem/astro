@@ -520,8 +520,18 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         c.gridx = 0;
         c.gridy = 0;
         panels[4].add(okButton, BorderLayout.WEST);
-        okButton.addActionListener(e -> d.dispose());
-
+        okButton.addActionListener(e -> {
+            currentLocation = locationList.getItemAt(locationList.getSelectedIndex());
+            longitude = currentLocation.longitude;
+            latitude = currentLocation.latitude;
+            locationName = currentLocation.name;
+            timeZoneName = currentLocation.timeZone;
+            preferences.putDouble("location.longitude", longitude);
+            preferences.putDouble("location.latitude", latitude);
+            preferences.put("location.name", locationName);
+            preferences.put("location.timezone", timeZoneName);
+            d.dispose();
+        });
         JButton cancelButton = new JButton("Cancel");
         c.gridx = 2;
         c.gridy = 0;
