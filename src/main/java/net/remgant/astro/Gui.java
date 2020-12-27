@@ -21,6 +21,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.*;
 import java.util.*;
 import java.util.List;
+import java.util.function.Function;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 import java.util.regex.Matcher;
@@ -45,8 +46,8 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         Gui frame = new Gui();
     }
 
-    private int screenSizeX;
-    private int screenSizeY;
+    private int windowWidth;
+    private int windowHeight;
     private final Panel panel;
     private final Set<Star> stars;
     private boolean showConBounds;
@@ -68,15 +69,15 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
     private String locationName;
     private String timeZoneName;
     private LocalDate displayDate;
-    private Map<String,Location> locationMap;
+    final private Map<String,Location> locationMap;
     private Location currentLocation;
 
     private Gui() {
         super("Remgant Sky Watcher");
 
         preferences = Preferences.userNodeForPackage(Gui.class);
-        screenSizeX = preferences.getInt("ScreenSizeX", 750);
-        screenSizeY = preferences.getInt("ScreenSizeY", 400);
+        windowWidth = preferences.getInt("window.width", 750);
+        windowHeight = preferences.getInt("window.height", 400);
         displayMode = DisplayMode.valueOf(preferences.get("DisplayMode",DisplayMode.FULL_SKY.name()));
         longitude = preferences.getDouble("location.longitude",-71.1);
         latitude = preferences.getDouble("location.latitude",42.3);
@@ -92,9 +93,8 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         displayDate = LocalDate.of(displayDateYear,displayDateMonth,displayDateDay);
 
         locationMap = loadLocations();
-        currentLocation = locationMap.get("Boston, MA, USA");
-        if (currentLocation == null)
-            currentLocation = new Location("Boston, MA, USA",-71.1,42.3, "America/New_York");
+        currentLocation = locationMap.getOrDefault(locationName,
+                new Location("Boston, MA, USA",-71.1,42.3, "America/New_York"));
 
         font = new Font(fontName,Font.PLAIN,fontSize);
         char symbol = (new Jupiter()).getSymbol().charAt(0);
@@ -112,7 +112,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         }
         System.out.println("using font "+font);
 
-        setBounds(0, 0, screenSizeX, screenSizeY);
+        setBounds(0, 0, windowWidth, windowHeight);
         addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
                 try {
@@ -211,8 +211,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         AboutMenuItem.addActionListener(e -> JOptionPane.showMessageDialog(Gui.this, "Remgant Sky Mapper"));
         HelpMenu.add(AboutMenuItem);
 
-
-        Dimension size = new Dimension(screenSizeX, screenSizeY);
+        Dimension size = new Dimension(windowWidth, windowHeight);
         panel = new Panel(size);
         getContentPane().add("Center", panel);
         panel.setPreferredSize(size);
@@ -698,7 +697,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
               double ra = o.getRA(0.0);
               double decl = o.getDecl(0.0);
               double x = d.getXOffset2D() + d.getWidth2D()
-                       - (ra / 360.0 * (double) screenSizeX);
+                       - (ra / 360.0 * (double) windowWidth);
               double y = d.getYOffset2D() +  (((90.0 - decl) / 180.0) *
                      d.getHeight2D());
 
@@ -714,34 +713,27 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         g.setColor(drawable.isBW() ? Color.BLACK : Color.WHITE);
         double width = drawable.getWidth2D();
         double height = drawable.getHeight2D();
-        try
-        {
-            BufferedReader in =
-                    new BufferedReader(new InputStreamReader(
-                            getClass().getResource("boundaries.dat").openStream()));
-            String line = in.readLine();
-            while (line != null && line.length() > 0) {
-                double[] d = tokenizeDoubles(line);
-                double x1 = width -  (d[0] / 360.0 * width);
-                double y1 = (((90.0 - d[1]) / 180.0) *  height);
-                double x2 = width - (d[2] / 360.0 * width);
-                double y2 = (((90.0 - d[3]) / 180.0) *  height);
-                if (Math.abs(x1 - x2) > width / 2.0) {
-                    if (x1 > x2) {
-                        g.draw(new Line2D.Double(x1,y1,width,y2));
-                        g.draw(new Line2D.Double(0.0,y1,x2,y2));
-                    } else {
-                        g.draw(new Line2D.Double(x1,y1,0.0,y2));
-                        g.draw(new Line2D.Double(width,y1,x2,y2));
-                    }
+        new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("boundaries.dat")))
+                .lines()
+                .filter(line -> line.length() > 0)
+                .forEach(line -> {
+            double[] d = tokenizeDoubles(line);
+            double x1 = width - (d[0] / 360.0 * width);
+            double y1 = (((90.0 - d[1]) / 180.0) * height);
+            double x2 = width - (d[2] / 360.0 * width);
+            double y2 = (((90.0 - d[3]) / 180.0) * height);
+            if (Math.abs(x1 - x2) > width / 2.0) {
+                if (x1 > x2) {
+                    g.draw(new Line2D.Double(x1, y1, width, y2));
+                    g.draw(new Line2D.Double(0.0, y1, x2, y2));
                 } else {
-                    g.draw(new Line2D.Double(x1,y1,x2,y2));
+                    g.draw(new Line2D.Double(x1, y1, 0.0, y2));
+                    g.draw(new Line2D.Double(width, y1, x2, y2));
                 }
-                line = in.readLine();
+            } else {
+                g.draw(new Line2D.Double(x1, y1, x2, y2));
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        });
     }
 
     private void drawIndexLines(Drawable d)
@@ -864,10 +856,10 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         if (!rectDisplayMode) {
             fillScreen(drawable, bounds, Color.gray);
             panel.clear(Color.gray);
-            int r = screenSizeX;
-            if (r > screenSizeY)
-                r = screenSizeY;
-            panel.drawFilledCircle(screenSizeX / 2, screenSizeY / 2, r, Color.black);
+            int r = windowWidth;
+            if (r > windowHeight)
+                r = windowHeight;
+            panel.drawFilledCircle(windowWidth / 2, windowHeight / 2, r, Color.black);
         } else {
             fillScreen(drawable, bounds, Color.black);
         }
@@ -1116,13 +1108,13 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
 
     @Override
     public void componentResized(ComponentEvent e) {
-        screenSizeX = panel.getWidth();
-        screenSizeY = panel.getHeight();
-        Dimension size = new Dimension(screenSizeX, screenSizeY);
+        windowWidth = panel.getWidth();
+        windowHeight = panel.getHeight();
+        Dimension size = new Dimension(windowWidth, windowHeight);
         panel.resizeImage(size);
         drawScreen(panel,displayMode);
-        preferences.putInt("ScreenSizeX", screenSizeX);
-        preferences.putInt("ScreenSizeY", screenSizeY);
+        preferences.putInt("window.width", windowWidth);
+        preferences.putInt("window.height", windowHeight);
     }
 
     @Override
@@ -1243,20 +1235,12 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
 
     private Map<String,Location> loadLocations()
     {
-        Map<String,Location> map = new TreeMap<>();
-        try {
-            BufferedReader in = new BufferedReader(new InputStreamReader(getClass().getResource("locations.dat").openStream()));
-            String line = in.readLine();
-            while (line != null)
-            {
-                Location.parse(line).ifPresent(l -> map.put(l.name, l));
-                line = in.readLine();
-            }
-        } catch (EOFException ignored) {
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return map;
+        return new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("locations.dat")))
+                .lines()
+                .map((Location::parse))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toMap(loc -> loc.name, Function.identity(), (a, b) -> a, TreeMap::new));
     }
 
     static class Location
@@ -1283,22 +1267,16 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         }
 
         @Override
-        public boolean equals(Object obj) {
-            if (!(obj instanceof Location))
-                return false;
-            Location l = (Location)obj;
-            if (l.name == null && this.name == null)
-                return true;
-            if (l.name == null || this.name == null)
-                return false;
-            return l.name.equals(this.name);
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (Objects.isNull(o) || getClass() != o.getClass()) return false;
+            Location location = (Location) o;
+            return name.equals(location.name);
         }
 
         @Override
         public int hashCode() {
-            if (name == null)
-                return "".hashCode();
-            return name.hashCode();
+            return Objects.hash(name);
         }
 
         @Override
