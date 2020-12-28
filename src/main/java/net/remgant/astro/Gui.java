@@ -117,11 +117,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         setBounds(0, 0, windowWidth, windowHeight);
         addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
-                try {
-                    preferences.sync();
-                } catch (BackingStoreException e1) {
-                    e1.printStackTrace();
-                }
+                handleWindowClosing();
                 System.exit(0);
             }
         });
@@ -149,11 +145,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
 
         JMenuItem ExitMenuItem = new JMenuItem("Exit");
         ExitMenuItem.addActionListener(e -> {
-            try {
-                preferences.sync();
-            } catch (BackingStoreException e1) {
-                e1.printStackTrace();
-            }
+            handleWindowClosing();
             System.exit(1);
         });
         FileMenu.add(ExitMenuItem);
@@ -241,7 +233,19 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         setIconImage(toolkit.createImage(iconURL));
 
         pack();
+        setLocation(new Point(preferences.getInt("window.x", 0), preferences.getInt("window.y", 0)));
         setVisible(true);
+    }
+
+    private void handleWindowClosing() {
+        Point p = getLocation();
+        preferences.putInt("window.x", p.x);
+        preferences.putInt("window.y", p.y);
+        try {
+            preferences.sync();
+        } catch (BackingStoreException e1) {
+            e1.printStackTrace();
+        }
     }
 
     private void editProperties() {
