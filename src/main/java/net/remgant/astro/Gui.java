@@ -38,9 +38,12 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         } catch (Exception ignore) {
         }
 
-        System.out.println(System.getProperties().getProperty("os.name"));
-        System.out.println(System.getProperties().getProperty("os.arch"));
-        System.out.println(System.getProperties().getProperty("os.version"));
+        System.out.printf("Look and Feel: %s%n", UIManager.getSystemLookAndFeelClassName());
+        System.out.printf("OS Name: %s%n", System.getProperties().getProperty("os.name"));
+        System.out.printf("OS Architecture: %s%n", System.getProperties().getProperty("os.arch"));
+        System.out.printf("OS Version: %s%n", System.getProperties().getProperty("os.version"));
+        System.out.printf("Java Version: %s%n", System.getProperties().getProperty("java.version"));
+        System.out.printf("Java Vendor: %s%n", System.getProperties().getProperty("java.vendor"));
 
         @SuppressWarnings({"UnusedDeclaration"})
         Gui frame = new Gui();
@@ -110,7 +113,6 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
             preferences.put("font.name", fontName);
             preferences.putInt("font.size", fontSize);
         }
-        System.out.println("using font "+font);
 
         setBounds(0, 0, windowWidth, windowHeight);
         addWindowListener(new WindowAdapter() {
@@ -445,7 +447,6 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         panels[1].add(datePicker);
 
         currentTimeButton.addChangeListener(e -> {
-            System.out.println("currentTimeButton: "+currentTimeButton.isSelected());
             if (currentTimeButton.isSelected())
             {
                 Calendar now = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
@@ -662,7 +663,6 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
         Graphics2D g = drawable.createGraphics();
         double width = drawable.getWidth2D();
         double height = drawable.getHeight2D();
-        System.out.printf("w = %f, h = %f%n",width,height);
         MovingObject[] planets = new MovingObject[]{new Moon(),new Sun(),new Venus(),new Mars(),new Jupiter(),new Saturn(),new Mercury()};
         Color[] colors = new Color[]{Color.WHITE,Color.YELLOW,Color.WHITE,Color.RED,Color.MAGENTA,Color.ORANGE,Color.GRAY};
         g.setColor(drawable.isBW()?Color.BLACK:Color.YELLOW);
@@ -690,21 +690,20 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
     private void drawStars(Drawable d)
     {
         Graphics2D g = d.createGraphics();
-          for (Star o : stars) {
-               double magnitude = o.getMagnitude();
-              if (magnitude > maxMagnitude)
-                  continue;
-              double ra = o.getRA(0.0);
-              double decl = o.getDecl(0.0);
-              double x = d.getXOffset2D() + d.getWidth2D()
-                       - (ra / 360.0 * (double) windowWidth);
-              double y = d.getYOffset2D() +  (((90.0 - decl) / 180.0) *
-                     d.getHeight2D());
+        stars.stream()
+                .filter(s -> s.magnitude <= maxMagnitude)
+                .forEach(o -> {
+                    double ra = o.getRA(0.0);
+                    double decl = o.getDecl(0.0);
+                    double x = d.getXOffset2D() + d.getWidth2D()
+                            - (ra / 360.0 * (double) windowWidth);
+                    double y = d.getYOffset2D() + (((90.0 - decl) / 180.0) *
+                            d.getHeight2D());
 
-              Color c = d.isBW() ? Color.BLACK : Color.WHITE;
-              g.setColor(c);
-              g.fill(new Ellipse2D.Double(x,y,2.0,2.0));
-          }
+                    Color c = d.isBW() ? Color.BLACK : Color.WHITE;
+                    g.setColor(c);
+                    g.fill(new Ellipse2D.Double(x, y, 2.0, 2.0));
+                });
     }
 
     private void drawBoundaryLines(Drawable drawable)
@@ -772,9 +771,7 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
 
     private void drawLocalScreen(Drawable drawable)
     {
-        System.out.println("Cal: "+displayDate.toString());
         double d = net.remgant.astro.Time.getDayNumber(displayDate);
-        System.out.println(d);
         double lon = -71.4750;
         double lat = 42.4750;
 
@@ -791,28 +788,29 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
             g.setColor(Color.BLACK);
             g.fill(e);
         }
-        Optional<Point2D> point;
-        for (Star o : stars) {
-            double az = o.getAzimuth(d, lon, lat);
-            double alt = o.getAltitude(d, lon, lat);
-            double magnitude = o.getMagnitude();
-            if (magnitude > maxMagnitude)
-                  continue;
-            if (rectDisplayMode)
-                point = getRectCoordinates(az, alt,bounds);
-            else
-                point = getCircCoordinates(az, alt,bounds);
-            point.ifPresent(p -> {
-                double x = p.getX();
-                double y = p.getY();
-                Color c = drawable.isBW() ? Color.BLACK : Color.WHITE;
-                g.setColor(c);
-                g.fill(new Ellipse2D.Double(x,y,2.0,2.0));
-            });
-        }
+
+        stars.stream()
+                .filter(o -> o.getMagnitude() <= maxMagnitude)
+                .forEach(o -> {
+                    double az = o.getAzimuth(d, lon, lat);
+                    double alt = o.getAltitude(d, lon, lat);
+                    Optional<Point2D> point;
+                    if (rectDisplayMode)
+                        point = getRectCoordinates(az, alt, bounds);
+                    else
+                        point = getCircCoordinates(az, alt, bounds);
+                    point.ifPresent(p -> {
+                        double x = p.getX();
+                        double y = p.getY();
+                        Color c = drawable.isBW() ? Color.BLACK : Color.WHITE;
+                        g.setColor(c);
+                        g.fill(new Ellipse2D.Double(x, y, 2.0, 2.0));
+                    });
+                });
         Moon moon = new Moon();
         double az = moon.getAzimuth(d, lon, lat);
         double alt = moon.getAltitude(d, lon, lat);
+        Optional<Point2D> point;
         if (rectDisplayMode)
             point = getRectCoordinates(az, alt, bounds);
         else
@@ -1196,7 +1194,6 @@ public class Gui extends JFrame implements ComponentListener, ActionListener,
                 g.fill(a);
             }
         }
-        System.out.println();
     }
 
     private void positionCursor(Drawable drawable, Point point) {
